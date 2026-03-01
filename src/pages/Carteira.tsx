@@ -35,9 +35,11 @@ import {
 } from "@/components/ui/dialog";
 import {
   Building2,
+  Check,
   CreditCard,
   DollarSign,
   Edit,
+  Loader2,
   Plus,
   Trash2,
   Wallet,
@@ -46,6 +48,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useCards } from "@/hooks/useCards";
 import { BankAccountType, useBankAccounts } from "@/hooks/useBankAccounts";
 import { supabase } from "@/integrations/supabase/client";
+import { type BankOption, getBanks } from "@/lib/bankService";
+import {
+  generateBankColor,
+  getBankAssetBySlug,
+  getBankInitials,
+  resolveBankSlug,
+} from "@/lib/bankAssets";
 
 const formatCurrency = (value: number) =>
   value.toLocaleString("pt-BR", {
@@ -83,6 +92,23 @@ type CardWithUsage = {
   usedMonth: number;
   available: number;
   utilization: number;
+};
+
+const normalizeBankText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getBankOptionMeta = (bank: BankOption) => {
+  const parts: string[] = [];
+  if (bank.code) parts.push(`Codigo ${bank.code}`);
+  if (bank.ispb) parts.push(`ISPB ${bank.ispb}`);
+  if (!parts.length) parts.push("Sem codigo bancario");
+  return parts.join(" • ");
 };
 
 const UtilizationBar = ({ value }: { value: number }) => {
@@ -177,11 +203,21 @@ const Carteira = () => {
   const [cardEditingId, setCardEditingId] = useState<string | null>(null);
   const [cardForm, setCardForm] = useState({
     name: "",
-    issuer_bank: "",
+    bank_name: "",
+    bank_code: "",
+    bank_slug: "",
+    brand_color: "",
     credit_limit: "",
     closing_day: "",
     due_day: "",
   });
+  const [banks, setBanks] = useState<BankOption[]>([]);
+  const [banksLoading, setBanksLoading] = useState(false);
+  const [banksInitialized, setBanksInitialized] = useState(false);
+  const [bankQuery, setBankQuery] = useState("");
+  const [bankSuggestions, setBankSuggestions] = useState<BankOption[]>([]);
+  const [bankSearchLoading, setBankSearchLoading] = useState(false);
+  const [bankOptionsOpen, setBankOptionsOpen] = useState(false);
 
   const [accountEditingId, setAccountEditingId] = useState<string | null>(null);
   const [accountForm, setAccountForm] = useState({
@@ -197,11 +233,17 @@ const Carteira = () => {
     setCardEditingId(null);
     setCardForm({
       name: "",
-      issuer_bank: "",
+      bank_name: "",
+      bank_code: "",
+      bank_slug: "",
+      brand_color: "",
       credit_limit: "",
       closing_day: "",
       due_day: "",
     });
+    setBankQuery("");
+    setBankSuggestions([]);
+    setBankOptionsOpen(false);
   };
 
   const resetAccountForm = () => {
@@ -228,13 +270,18 @@ const Carteira = () => {
     const card = cards.find((item) => item.id === id);
     if (!card) return;
     setCardEditingId(id);
+    const currentBankName = card.issuer_bank || "";
     setCardForm({
       name: card.name,
-      issuer_bank: card.issuer_bank || "",
+      bank_name: (card.bank_name || currentBankName) as string,
+      bank_code: card.bank_code || "",
+      bank_slug: card.bank_slug || "",
+      brand_color: card.brand_color || "",
       credit_limit: String(card.credit_limit),
       closing_day: String(card.closing_day),
       due_day: String(card.due_day),
     });
+    setBankQuery(currentBankName);
     setDialogOpen(true);
   };
 
@@ -325,6 +372,56 @@ const Carteira = () => {
     loadCreditUsageMonth();
   }, []);
 
+  useEffect(() => {
+    if (!dialogOpen || !isCardsTab || banksInitialized) return;
+
+    let active = true;
+    setBanksLoading(true);
+    getBanks()
+      .then((result) => {
+        if (!active) return;
+        setBanks(result);
+      })
+      .finally(() => {
+        if (!active) return;
+        setBanksLoading(false);
+        setBanksInitialized(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [banksInitialized, dialogOpen, isCardsTab]);
+
+  useEffect(() => {
+    if (!dialogOpen || !isCardsTab) return;
+
+    setBankSearchLoading(true);
+    const timeoutId = window.setTimeout(() => {
+      const query = normalizeBankText(bankQuery);
+      if (!query) {
+        setBankSuggestions(banks.slice(0, 8));
+        setBankSearchLoading(false);
+        return;
+      }
+
+      const filtered = banks
+        .filter((bank) => {
+          const codeLabel = bank.code ? `codigo ${bank.code}` : "";
+          const source = `${bank.name} ${bank.fullName} ${codeLabel} ${bank.ispb}`;
+          return normalizeBankText(source).includes(query);
+        })
+        .slice(0, 8);
+
+      setBankSuggestions(filtered);
+      setBankSearchLoading(false);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [bankQuery, banks, dialogOpen, isCardsTab]);
+
   const cardsWithUsage = useMemo<CardWithUsage[]>(
     () =>
       cards.map((card) => {
@@ -370,6 +467,17 @@ const Carteira = () => {
     };
   }, [accounts]);
 
+  const resolvedBankSlug = useMemo(
+    () => resolveBankSlug(cardForm.bank_name, cardForm.bank_code) || cardForm.bank_slug || null,
+    [cardForm.bank_name, cardForm.bank_code, cardForm.bank_slug]
+  );
+  const bankAsset = useMemo(() => getBankAssetBySlug(resolvedBankSlug), [resolvedBankSlug]);
+  const bankBrandColor = useMemo(
+    () => bankAsset?.color || cardForm.brand_color || generateBankColor(cardForm.bank_name),
+    [bankAsset?.color, cardForm.brand_color, cardForm.bank_name]
+  );
+  const bankInitials = useMemo(() => getBankInitials(cardForm.bank_name), [cardForm.bank_name]);
+
   const handleSaveCard = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -384,7 +492,11 @@ const Carteira = () => {
 
     const payload = {
       name: cardForm.name.trim(),
-      issuer_bank: cardForm.issuer_bank.trim() || null,
+      issuer_bank: cardForm.bank_name.trim() || null,
+      bank_name: cardForm.bank_name.trim() || null,
+      bank_code: cardForm.bank_code.trim() || null,
+      bank_slug: resolvedBankSlug,
+      brand_color: bankBrandColor,
       credit_limit: Number(cardForm.credit_limit),
       closing_day: Number(cardForm.closing_day),
       due_day: Number(cardForm.due_day),
@@ -480,149 +592,155 @@ const Carteira = () => {
           </div>
           {isCardsTab ? (
           <>
-            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
               <WalletSummaryCard icon={CreditCard} label="Limite Total" value={formatCurrency(cardsKpis.totalLimit)} hint="Total" iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300" />
               <WalletSummaryCard icon={Wallet} label="Cartoes" value={String(cardsKpis.cardsCount)} hint="Cadastrados" iconClassName="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300" />
               <WalletSummaryCard icon={DollarSign} label="Uso no Mes" value={formatCurrency(cardsKpis.usedMonth)} hint="Neste mes" iconClassName="bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300" />
               <WalletSummaryCard icon={Building2} label="Disponivel" value={formatCurrency(cardsKpis.available)} hint="Limite restante" iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300" />
             </div>
 
-            {cardsWithUsage.length === 0 ? (
-              <EmptyState
-                icon={CreditCard}
-                title="Nenhum cartao cadastrado"
-                description="Cadastre seu primeiro cartao para acompanhar limite, uso mensal e ciclo da fatura."
-                actionLabel="Adicionar Cartao"
-                onAction={openCreateDialog}
-              />
-            ) : (
-              <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader className="bg-muted/50">
-                      <TableRow>
-                        <TableHead>Cartao</TableHead>
-                        <TableHead>Banco</TableHead>
-                        <TableHead className="text-right">Limite</TableHead>
-                        <TableHead className="text-right">Uso no mes</TableHead>
-                        <TableHead className="text-right">Disponivel</TableHead>
-                        <TableHead>Utilizacao</TableHead>
-                        <TableHead>Ciclo</TableHead>
-                        <TableHead className="text-right">Acoes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {cardsWithUsage.map((card) => (
-                        <TableRow key={card.id}>
-                          <TableCell className="font-medium">{card.name}</TableCell>
-                          <TableCell>{card.issuer_bank || "-"}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatCurrency(card.credit_limit)}</TableCell>
-                          <TableCell className="text-right tabular-nums text-red-600">{formatCurrency(card.usedMonth)}</TableCell>
-                          <TableCell className="text-right tabular-nums text-emerald-600">{formatCurrency(card.available)}</TableCell>
-                          <TableCell><UtilizationBar value={card.utilization} /></TableCell>
-                          <TableCell className="text-sm text-slate-600 dark:text-slate-300">Fecha dia {card.closing_day} • Vence dia {card.due_day}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
-                                  <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
+            <div className="h-8" />
+            <div>
+              {cardsWithUsage.length === 0 ? (
+                <EmptyState
+                  icon={CreditCard}
+                  title="Nenhum cartao cadastrado"
+                  description="Cadastre seu primeiro cartao para acompanhar limite, uso mensal e ciclo da fatura."
+                  actionLabel="Adicionar Cartao"
+                  onAction={openCreateDialog}
+                />
+              ) : (
+                <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead>Cartao</TableHead>
+                          <TableHead>Banco</TableHead>
+                          <TableHead className="text-right">Limite</TableHead>
+                          <TableHead className="text-right">Uso no mes</TableHead>
+                          <TableHead className="text-right">Disponivel</TableHead>
+                          <TableHead>Utilizacao</TableHead>
+                          <TableHead>Ciclo</TableHead>
+                          <TableHead className="text-right">Acoes</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {cardsWithUsage.map((card) => (
+                          <TableRow key={card.id}>
+                            <TableCell className="font-medium">{card.name}</TableCell>
+                            <TableCell>{card.issuer_bank || "-"}</TableCell>
+                            <TableCell className="text-right tabular-nums">{formatCurrency(card.credit_limit)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-red-600">{formatCurrency(card.usedMonth)}</TableCell>
+                            <TableCell className="text-right tabular-nums text-emerald-600">{formatCurrency(card.available)}</TableCell>
+                            <TableCell><UtilizationBar value={card.utilization} /></TableCell>
+                            <TableCell className="text-sm text-slate-600 dark:text-slate-300">Fecha dia {card.closing_day} • Vence dia {card.due_day}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                                    <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
-                <div className="space-y-3 p-4 md:hidden">
-                  {cardsWithUsage.map((card) => (
-                    <Card key={card.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
-                      <div className="mb-3 flex items-start justify-between gap-2">
-                        <div><p className="font-semibold text-slate-900 dark:text-slate-100">{card.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{card.issuer_bank || "Sem banco"}</p></div>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
-                              <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                  <div className="space-y-3 p-4 md:hidden">
+                    {cardsWithUsage.map((card) => (
+                      <Card key={card.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
+                        <div className="mb-3 flex items-start justify-between gap-2">
+                          <div><p className="font-semibold text-slate-900 dark:text-slate-100">{card.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{card.issuer_bank || "Sem banco"}</p></div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
+                                <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-2 text-sm">
-                        <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Limite</span><span className="font-semibold tabular-nums">{formatCurrency(card.credit_limit)}</span></div>
-                        <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Uso no mes</span><span className="font-semibold tabular-nums text-red-600">{formatCurrency(card.usedMonth)}</span></div>
-                        <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Disponivel</span><span className="font-semibold tabular-nums text-emerald-600">{formatCurrency(card.available)}</span></div>
-                      </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Limite</span><span className="font-semibold tabular-nums">{formatCurrency(card.credit_limit)}</span></div>
+                          <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Uso no mes</span><span className="font-semibold tabular-nums text-red-600">{formatCurrency(card.usedMonth)}</span></div>
+                          <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Disponivel</span><span className="font-semibold tabular-nums text-emerald-600">{formatCurrency(card.available)}</span></div>
+                        </div>
 
-                      <div className="mt-3"><UtilizationBar value={card.utilization} /><p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha dia {card.closing_day} • Vence dia {card.due_day}</p></div>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
-            )}
+                        <div className="mt-3"><UtilizationBar value={card.utilization} /><p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha dia {card.closing_day} • Vence dia {card.due_day}</p></div>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
           </>
           ) : (
           <>
-            <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
               <WalletSummaryCard icon={DollarSign} label="Saldo Total" value={formatCurrency(accountsKpis.totalBalance)} hint="Total em contas" iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300" />
               <WalletSummaryCard icon={Wallet} label="Contas" value={String(accountsKpis.accountsCount)} hint="Ativas" iconClassName="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300" />
               <WalletSummaryCard icon={Building2} label="Maior Saldo" value={accountsKpis.highest ? formatCurrency(accountsKpis.highest.balance) : "-"} hint={accountsKpis.highest?.name || "Sem conta"} iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300" />
               <WalletSummaryCard icon={Building2} label="Menor Saldo" value={accountsKpis.lowest ? formatCurrency(accountsKpis.lowest.balance) : "-"} hint={accountsKpis.lowest?.name || "Sem conta"} iconClassName="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300" />
             </div>
 
-            {accounts.length === 0 ? (
-              <EmptyState
-                icon={Building2}
-                title="Nenhuma conta cadastrada"
-                description="Cadastre sua primeira conta para centralizar saldos e acompanhar sua liquidez."
-                actionLabel="Adicionar Conta"
-                onAction={openCreateDialog}
-              />
-            ) : (
-              <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader className="bg-muted/50">
-                      <TableRow>
-                        <TableHead>Conta</TableHead>
-                        <TableHead>Banco</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead className="text-right">Saldo</TableHead>
-                        <TableHead className="text-right">Acoes</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {accounts.map((account) => (
-                        <TableRow key={account.id}>
-                          <TableCell className="font-medium">{account.name}</TableCell>
-                          <TableCell>{account.bank_name}</TableCell>
-                          <TableCell>{contaTipoLabel[account.account_type]}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatCurrency(account.balance)}</TableCell>
-                          <TableCell className="text-right"><div className="flex items-center justify-end gap-2"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></TableCell>
+            <div className="h-8" />
+            <div>
+              {accounts.length === 0 ? (
+                <EmptyState
+                  icon={Building2}
+                  title="Nenhuma conta cadastrada"
+                  description="Cadastre sua primeira conta para centralizar saldos e acompanhar sua liquidez."
+                  actionLabel="Adicionar Conta"
+                  onAction={openCreateDialog}
+                />
+              ) : (
+                <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader className="bg-muted/50">
+                        <TableRow>
+                          <TableHead>Conta</TableHead>
+                          <TableHead>Banco</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead className="text-right">Saldo</TableHead>
+                          <TableHead className="text-right">Acoes</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {accounts.map((account) => (
+                          <TableRow key={account.id}>
+                            <TableCell className="font-medium">{account.name}</TableCell>
+                            <TableCell>{account.bank_name}</TableCell>
+                            <TableCell>{contaTipoLabel[account.account_type]}</TableCell>
+                            <TableCell className="text-right tabular-nums">{formatCurrency(account.balance)}</TableCell>
+                            <TableCell className="text-right"><div className="flex items-center justify-end gap-2"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
 
-                <div className="space-y-3 p-4 md:hidden">
-                  {accounts.map((account) => (
-                    <Card key={account.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
-                      <div className="mb-3 flex items-start justify-between gap-2"><div><p className="font-semibold text-slate-900 dark:text-slate-100">{account.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{account.bank_name}</p></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></div>
-                      <div className="space-y-2 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Tipo</span><span className="font-medium">{contaTipoLabel[account.account_type]}</span></div><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Saldo</span><span className="font-semibold tabular-nums">{formatCurrency(account.balance)}</span></div></div>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
-            )}
+                  <div className="space-y-3 p-4 md:hidden">
+                    {accounts.map((account) => (
+                      <Card key={account.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
+                        <div className="mb-3 flex items-start justify-between gap-2"><div><p className="font-semibold text-slate-900 dark:text-slate-100">{account.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{account.bank_name}</p></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></div>
+                        <div className="space-y-2 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Tipo</span><span className="font-medium">{contaTipoLabel[account.account_type]}</span></div><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Saldo</span><span className="font-semibold tabular-nums">{formatCurrency(account.balance)}</span></div></div>
+                      </Card>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
           </>
           )}
         </Tabs>
@@ -650,14 +768,123 @@ const Carteira = () => {
                       <Label htmlFor="card-name">Nome do cartao *</Label>
                       <Input id="card-name" value={cardForm.name} onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })} />
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="issuer-bank">Banco emissor</Label>
-                      <Input id="issuer-bank" value={cardForm.issuer_bank} onChange={(e) => setCardForm({ ...cardForm, issuer_bank: e.target.value })} />
+                      <Label htmlFor="bank-name">Banco emissor</Label>
+                      <div className="relative">
+                        <div className="relative">
+                          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                            {bankAsset?.logo ? (
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
+                                <img
+                                  src={bankAsset.logo}
+                                  alt={`Logo ${cardForm.bank_name || "Banco"}`}
+                                  className="h-4 w-4 object-contain"
+                                />
+                              </span>
+                            ) : (
+                              <span className="flex h-7 w-7 items-center justify-center gap-1 rounded-full bg-slate-200 px-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                <Building2 className="h-3 w-3" />
+                                <span>{bankInitials}</span>
+                              </span>
+                            )}
+                          </div>
+                          <Input
+                            id="bank-name"
+                            value={cardForm.bank_name}
+                            placeholder="Digite para buscar ou preencher manualmente"
+                            onChange={(e) => {
+                              setCardForm({ ...cardForm, bank_name: e.target.value });
+                              setBankQuery(e.target.value);
+                              setBankOptionsOpen(true);
+                            }}
+                            onFocus={() => {
+                              setBankQuery(cardForm.bank_name);
+                              setBankOptionsOpen(true);
+                            }}
+                            onBlur={() => {
+                              window.setTimeout(() => setBankOptionsOpen(false), 120);
+                            }}
+                            className="pr-10 pl-12"
+                          />
+                          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
+                            {banksLoading || bankSearchLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : null}
+                          </div>
+                        </div>
+                        {bankOptionsOpen ? (
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                            {banksLoading || bankSearchLoading ? (
+                              <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Carregando bancos...
+                              </div>
+                            ) : null}
+                            {!banksLoading && !bankSearchLoading && bankSuggestions.length === 0 ? (
+                              <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                                Nenhum banco encontrado. Voce pode digitar manualmente.
+                              </div>
+                            ) : null}
+                            {!banksLoading && !bankSearchLoading
+                              ? bankSuggestions.map((bank) => {
+                                  const isSelected =
+                                    cardForm.bank_name === bank.fullName &&
+                                    (cardForm.bank_code || "") === (bank.code || "");
+                                  return (
+                                    <button
+                                      key={`${bank.ispb || bank.fullName}-${bank.code || "no-code"}`}
+                                      type="button"
+                                      className="flex w-full items-start justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800"
+                                      onMouseDown={(event) => event.preventDefault()}
+                                      onClick={() => {
+                                        setCardForm({
+                                          ...cardForm,
+                                          bank_name: bank.fullName,
+                                          bank_code: bank.code || "",
+                                          bank_slug: resolveBankSlug(bank.fullName, bank.code || "") || "",
+                                          brand_color:
+                                            getBankAssetBySlug(resolveBankSlug(bank.fullName, bank.code || ""))?.color || "",
+                                        });
+                                        setBankQuery(bank.fullName);
+                                        setBankOptionsOpen(false);
+                                      }}
+                                    >
+                                      <span className="min-w-0">
+                                        <span className="block truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                                          {bank.fullName}
+                                        </span>
+                                        <span className="mt-0.5 block truncate text-xs text-slate-500 dark:text-slate-400">
+                                          {getBankOptionMeta(bank)}
+                                        </span>
+                                      </span>
+                                      {isSelected ? (
+                                        <Check className="mt-0.5 h-4 w-4 text-emerald-600" />
+                                      ) : null}
+                                    </button>
+                                  );
+                                })
+                              : null}
+                          </div>
+                        ) : null}
+                      </div>
                     </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="bank-code">Codigo do banco</Label>
+                      <Input
+                        id="bank-code"
+                        value={cardForm.bank_code}
+                        placeholder="Ex.: 341"
+                        onChange={(e) => setCardForm({ ...cardForm, bank_code: e.target.value })}
+                      />
+                    </div>
+
                     <div className="space-y-2">
                       <Label htmlFor="credit-limit">Limite de credito *</Label>
                       <CurrencyInput id="credit-limit" value={cardForm.credit_limit} onValueChange={(value) => setCardForm({ ...cardForm, credit_limit: value })} />
                     </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="closing-day">Fechamento *</Label>
@@ -666,6 +893,41 @@ const Carteira = () => {
                       <div className="space-y-2">
                         <Label htmlFor="due-day">Vencimento *</Label>
                         <Input id="due-day" type="number" min={1} max={28} value={cardForm.due_day} onChange={(e) => setCardForm({ ...cardForm, due_day: e.target.value })} />
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <div
+                        className="rounded-xl border border-slate-200 p-4 text-white shadow-sm dark:border-slate-700"
+                        style={{ background: `linear-gradient(135deg, ${bankBrandColor} 0%, #0f172a 100%)` }}
+                      >
+                        <p className="mb-3 text-xs uppercase tracking-wider text-slate-300">Preview do cartao</p>
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-base font-semibold">{cardForm.name.trim() || "Nome do cartao"}</p>
+                            <p className="mt-1 text-sm text-slate-300">{cardForm.bank_name.trim() || "Banco emissor"}</p>
+                          </div>
+                          {bankAsset?.logo ? (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white">
+                              <img
+                                src={bankAsset.logo}
+                                alt={`Logo ${cardForm.bank_name || "Banco"}`}
+                                className="h-7 w-7 object-contain"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                              <div className="flex flex-col items-center leading-none">
+                                <Building2 className="h-4 w-4" />
+                                <span className="mt-1 text-[10px] font-bold">{bankInitials}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-4 flex items-center justify-between text-xs text-slate-300">
+                          <span>Fechamento: dia {cardForm.closing_day || "--"}</span>
+                          <span>Vencimento: dia {cardForm.due_day || "--"}</span>
+                        </div>
                       </div>
                     </div>
                   </div>

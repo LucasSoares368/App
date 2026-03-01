@@ -7,6 +7,10 @@ export interface CreditCard {
   user_id: string;
   name: string;
   issuer_bank: string | null;
+  bank_name: string | null;
+  bank_code: string | null;
+  bank_slug: string | null;
+  brand_color: string | null;
   credit_limit: number;
   closing_day: number;
   due_day: number;

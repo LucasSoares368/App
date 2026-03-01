@@ -155,6 +155,10 @@ export type Database = {
       };
       cards: {
         Row: {
+          bank_code: string | null;
+          bank_name: string | null;
+          bank_slug: string | null;
+          brand_color: string | null;
           closing_day: number;
           created_at: string;
           credit_limit: number;
@@ -169,6 +173,10 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          bank_code?: string | null;
+          bank_name?: string | null;
+          bank_slug?: string | null;
+          brand_color?: string | null;
           closing_day: number;
           created_at?: string;
           credit_limit?: number;
@@ -183,6 +191,10 @@ export type Database = {
           user_id: string;
         };
         Update: {
+          bank_code?: string | null;
+          bank_name?: string | null;
+          bank_slug?: string | null;
+          brand_color?: string | null;
           closing_day?: number;
           created_at?: string;
           credit_limit?: number;
