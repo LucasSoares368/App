@@ -1,12 +1,10 @@
 ﻿import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { MonthYearCalendarPicker } from "@/components/MonthYearCalendarPicker";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -429,7 +427,7 @@ const Receitas = () => {
       : variacaoPositiva
       ? "success"
       : "danger";
-  const media6MesesTexto = `R$ ${kpis.mediaMensalUltimos6Meses.toLocaleString("pt-BR", {
+  const media6MesesTexto = `R$ ${kpis.mediaMensal.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
   })}`;
   const melhorCategoriaValor = kpis.melhorCategoria
@@ -698,7 +696,7 @@ const Receitas = () => {
             </p>
           </div>
           <div className="flex w-full flex-row items-center justify-end gap-2 sm:w-auto">
-            <div className="flex h-14 items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50/70 px-3 dark:border-slate-700 dark:bg-slate-900/40">
+            <div className="flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50/70 px-3 py-2 dark:border-slate-700 dark:bg-slate-900/40">
               <Button
                 type="button"
                 variant="outline"
@@ -708,24 +706,9 @@ const Receitas = () => {
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-9 px-2 text-sm font-semibold text-gray-900 dark:text-slate-100"
-                    aria-label="Selecionar mês no calendário"
-                  >
-                    {mesReferenciaLabel}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="center">
-                  <MonthYearCalendarPicker
-                    value={mesReferencia}
-                    onSelect={aplicarMesReferencia}
-                  />
-                </PopoverContent>
-              </Popover>
+              <span className="text-sm font-semibold text-gray-900 dark:text-slate-100">
+                {mesReferenciaLabel}
+              </span>
               <Button
                 type="button"
                 variant="outline"
@@ -738,7 +721,7 @@ const Receitas = () => {
             </div>
             <Button
               onClick={() => setActiveTab("adicionar")}
-              className="h-14 w-auto bg-orange-500 px-5 text-sm font-semibold hover:bg-orange-600"
+              className="bg-orange-500 hover:bg-orange-600 w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
               Registrar Receita
@@ -759,9 +742,15 @@ const Receitas = () => {
             iconVariant="success"
           />
           <KpiCard
-            title="Média mensal dos últimos 6 meses"
+            title={
+              kpis.isFiltered
+                ? "Média mensal do período"
+                : "Média mensal dos últimos 6 meses"
+            }
             value={media6MesesTexto}
-            subtitle="• Base dos últimos 6 meses"
+            subtitle={
+              kpis.isFiltered ? `• Base: ${kpis.periodLabel}` : "• Base dos últimos 6 meses"
+            }
             icon={TrendingUp}
             variant="neutral"
           />
@@ -773,7 +762,7 @@ const Receitas = () => {
             variant="neutral"
           />
           <KpiCard
-            title="Receita prevista (recorrência)"
+            title="Receita prevista"
             value={receitaPrevistaTexto}
             subtitle={`${kpis.recorrenciasAtivasNoPeriodo} recorrência(s) ativa(s)`}
             icon={AlertTriangle}
