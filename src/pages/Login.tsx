@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { RegisterForm } from "@/components/auth/RegisterForm";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
@@ -10,7 +10,7 @@ type AuthMode = "login" | "register" | "forgot-password" | "reset-password";
 const Login = () => {
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<AuthMode>(() => {
-    // Se tiver o token de redefiniÃ§Ã£o de senha na URL, mostra o formulÃ¡rio de reset
+    // Se tiver o token de redefinição de senha na URL, mostra o formulário de reset
     return searchParams.get("type") === "recovery" ? "reset-password" : "login";
   });
 
@@ -45,7 +45,7 @@ const Login = () => {
             </div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-slate-100">Mordomo</h1>
             <p className="text-gray-600 dark:text-slate-300 mt-2">
-              {mode === "login" && "FaÃ§a login em sua conta"}
+              {mode === "login" && "Faça login em sua conta"}
               {mode === "register" && "Crie sua conta"}
               {mode === "forgot-password" && "Recupere sua senha"}
               {mode === "reset-password" && "Defina sua nova senha"}

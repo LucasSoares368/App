@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import {
   Card,
@@ -67,7 +67,7 @@ interface MetaForm {
   descricao?: string;
 }
 
-// FunÃ§Ã£o para formatar a data para exibiÃ§Ã£o (DD/MM/YYYY)
+// Função para formatar a data para exibição (DD/MM/YYYY)
 const formatDateForDisplay = (dateString: string) => {
   if (!dateString) return "";
   const date = new Date(dateString + "T12:00:00");
@@ -122,7 +122,7 @@ const Metas = () => {
     setBusca("");
   };
 
-  // FunÃ§Ãµes para categorias
+  // Funções para categorias
   const adicionarCategoriaMeta = async () => {
     if (!novaCategoriaNome.trim()) {
       toast({
@@ -166,11 +166,11 @@ const Metas = () => {
   const handleImportarCategoriasPadrao = async () => {
     type CategoriaMetaPadrao = { nome: string; cor: string; descricao: string };
     const categoriasPadrao: CategoriaMetaPadrao[] = [
-      { nome: 'EmergÃªncia', cor: '#EF4444', descricao: 'Reserva para emergÃªncias e imprevistos' },
-      { nome: 'Viagem', cor: '#3B82F6', descricao: 'Economias para viagens e fÃ©rias' },
+      { nome: 'Emergência', cor: '#EF4444', descricao: 'Reserva para emergências e imprevistos' },
+      { nome: 'Viagem', cor: '#3B82F6', descricao: 'Economias para viagens e férias' },
       { nome: 'Investimentos', cor: '#10B981', descricao: 'Aportes em investimentos' },
-      { nome: 'Casa PrÃ³pria', cor: '#F59E0B', descricao: 'Economia para compra da casa prÃ³pria' },
-      { nome: 'EducaÃ§Ã£o', cor: '#8B5CF6', descricao: 'Investimento em cursos e formaÃ§Ã£o' },
+      { nome: 'Casa Própria', cor: '#F59E0B', descricao: 'Economia para compra da casa própria' },
+      { nome: 'Educação', cor: '#8B5CF6', descricao: 'Investimento em cursos e formação' },
     ];
 
     try {
@@ -179,13 +179,13 @@ const Metas = () => {
       }
       toast({
         title: "Sucesso!",
-        description: "Categorias de metas padrÃ£o importadas com sucesso.",
+        description: "Categorias de metas padrão importadas com sucesso.",
       });
     } catch (error) {
-      console.error("Erro ao importar categorias de metas padrÃ£o:", error);
+      console.error("Erro ao importar categorias de metas padrão:", error);
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel importar as categorias de metas padrÃ£o. Tente novamente.",
+        description: "Não foi possível importar as categorias de metas padrão. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -253,7 +253,7 @@ const Metas = () => {
     }
   };
 
-  // EstatÃ­sticas
+  // Estatísticas
   const totalMetas = metas.length;
   const metasAtivas = metas.filter((m) => m.status === "ativa").length;
   const metasConcluidas = metas.filter((m) => m.status === "concluida").length;
@@ -266,7 +266,7 @@ const Metas = () => {
         ) / totalMetas
       : 0;
 
-  // Cores da paleta especÃ­fica
+  // Cores da paleta específica
   const cores = [
     "#10B981", // verde
     "#3B82F6", // azul
@@ -299,7 +299,7 @@ const Metas = () => {
           />
         </div>
 
-        {/* EstatÃ­sticas */}
+        {/* Estatísticas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -329,7 +329,7 @@ const Metas = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">ConcluÃ­das</CardTitle>
+              <CardTitle className="text-sm font-medium">Concluídas</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -342,7 +342,7 @@ const Metas = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Progresso MÃ©dio
+                Progresso Médio
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -380,7 +380,7 @@ const Metas = () => {
                 >
                   <option value="todas">Todos os Status</option>
                   <option value="ativa">Ativas</option>
-                  <option value="concluida">ConcluÃ­das</option>
+                  <option value="concluida">Concluídas</option>
                   <option value="pausada">Pausadas</option>
                   <option value="vencida">Vencidas</option>
                 </select>
@@ -440,7 +440,7 @@ const Metas = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* VersÃ£o Desktop da Tabela */}
+                {/* Versão Desktop da Tabela */}
                 <div className="hidden md:block">
                   <Table>
                     <TableHeader>
@@ -452,7 +452,7 @@ const Metas = () => {
                         </TableHead>
                         <TableHead className="min-w-[100px]">Status</TableHead>
                         <TableHead className="min-w-[120px]">Prazo</TableHead>
-                        <TableHead className="w-[100px]">AÃ§Ãµes</TableHead>
+                        <TableHead className="w-[100px]">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -536,7 +536,7 @@ const Metas = () => {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       Tem certeza que deseja excluir a meta "
-                                      {meta.titulo}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                      {meta.titulo}"? Esta ação não pode ser
                                       desfeita.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
@@ -561,7 +561,7 @@ const Metas = () => {
                   </Table>
                 </div>
 
-                {/* VersÃ£o Mobile - Cards */}
+                {/* Versão Mobile - Cards */}
                 <div className="md:hidden space-y-4">
                   {metasFiltradas.map((meta) => (
                     <Card key={meta.id} className="p-4">
@@ -640,7 +640,7 @@ const Metas = () => {
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Tem certeza que deseja excluir a meta "
-                                    {meta.titulo}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                    {meta.titulo}"? Esta ação não pode ser
                                     desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
@@ -736,7 +736,7 @@ const Metas = () => {
 
           <TabsContent value="categorias">
             <div className="space-y-4 md:space-y-6">
-              {/* FormulÃ¡rio para nova categoria */}
+              {/* Formulário para nova categoria */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base md:text-lg">
@@ -752,7 +752,7 @@ const Metas = () => {
                       <Label htmlFor="categoriaNome">Nome da Categoria *</Label>
                       <Input
                         id="categoriaNome"
-                        placeholder="Ex: Casa PrÃ³pria, Carro..."
+                        placeholder="Ex: Casa Própria, Carro..."
                         value={novaCategoriaNome}
                         onChange={(e) => setNovaCategoriaNome(e.target.value)}
                       />
@@ -785,10 +785,10 @@ const Metas = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="categoriaDescricao">DescriÃ§Ã£o</Label>
+                      <Label htmlFor="categoriaDescricao">Descrição</Label>
                       <Input
                         id="categoriaDescricao"
-                        placeholder="DescriÃ§Ã£o opcional..."
+                        placeholder="Descrição opcional..."
                         value={novaCategoriaDescricao}
                         onChange={(e) =>
                           setNovaCategoriaDescricao(e.target.value)
@@ -805,7 +805,7 @@ const Metas = () => {
                         className="w-full sm:w-auto"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        Importar Categorias PadrÃ£o
+                        Importar Categorias Padrão
                       </Button>
                       <Button
                         onClick={adicionarCategoriaMeta}
@@ -834,7 +834,7 @@ const Metas = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* VersÃ£o Desktop da Tabela */}
+                  {/* Versão Desktop da Tabela */}
                   <div className="hidden md:block">
                     <Table>
                       <TableHeader>
@@ -842,12 +842,12 @@ const Metas = () => {
                           <TableHead className="min-w-[200px]">
                             Categoria
                           </TableHead>
-                          <TableHead>DescriÃ§Ã£o</TableHead>
+                          <TableHead>Descrição</TableHead>
                           <TableHead className="min-w-[100px]">
                             Status
                           </TableHead>
                           <TableHead className="text-right w-[200px]">
-                            AÃ§Ãµes
+                            Ações
                           </TableHead>
                         </TableRow>
                       </TableHeader>
@@ -864,7 +864,7 @@ const Metas = () => {
                               </div>
                             </TableCell>
                             <TableCell className="text-gray-600 dark:text-slate-300">
-                              {categoria.descricao || "Sem descriÃ§Ã£o"}
+                              {categoria.descricao || "Sem descrição"}
                             </TableCell>
                             <TableCell>
                               <span
@@ -905,8 +905,8 @@ const Metas = () => {
                                       </AlertDialogTitle>
                                       <AlertDialogDescription>
                                         Tem certeza que deseja excluir a
-                                        categoria "{categoria.nome}"? Esta aÃ§Ã£o
-                                        nÃ£o pode ser desfeita.
+                                        categoria "{categoria.nome}"? Esta ação
+                                        não pode ser desfeita.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
@@ -932,7 +932,7 @@ const Metas = () => {
                     </Table>
                   </div>
 
-                  {/* VersÃ£o Mobile - Cards */}
+                  {/* Versão Mobile - Cards */}
                   <div className="md:hidden space-y-4">
                     {categoriasMetas.map((categoria) => (
                       <Card key={categoria.id} className="p-4">
@@ -959,7 +959,7 @@ const Metas = () => {
                           </div>
 
                           <p className="text-sm text-gray-600 dark:text-slate-300">
-                            {categoria.descricao || "Sem descriÃ§Ã£o"}
+                            {categoria.descricao || "Sem descrição"}
                           </p>
 
                           <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-100">
@@ -988,7 +988,7 @@ const Metas = () => {
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Tem certeza que deseja excluir a categoria "
-                                    {categoria.nome}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                    {categoria.nome}"? Esta ação não pode ser
                                     desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
@@ -1018,7 +1018,7 @@ const Metas = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Modal de EdiÃ§Ã£o */}
+        {/* Modal de Edição */}
         <EditarMetaModal
           meta={metaParaEditar}
           open={modalEditarAberto}

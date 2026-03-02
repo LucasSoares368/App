@@ -7,6 +7,7 @@ type ReceitaModelo = {
   categoria_id: string | null;
   bank_account_id: string | null;
   forma_pagamento: string | null;
+  status_recebimento?: "recebido" | "pendente" | null;
   data: string;
   dia_recorrencia: number | null;
   tipo_receita?: "fixa" | "variavel";
@@ -50,7 +51,7 @@ export const gerarReceitasRecorrentesPendentes = async () => {
   const { data: modelosComTipo, error: modelosComTipoError } = await supabase
     .from("receitas")
     .select(
-      "id, descricao, valor, categoria_id, bank_account_id, forma_pagamento, data, dia_recorrencia, tipo_receita, frequencia_recorrencia, data_fim_recorrencia"
+      "id, descricao, valor, categoria_id, bank_account_id, forma_pagamento, status_recebimento, data, dia_recorrencia, tipo_receita, frequencia_recorrencia, data_fim_recorrencia"
     )
     .eq("recorrente", true)
     .is("receita_pai_id", null);
@@ -64,7 +65,7 @@ export const gerarReceitasRecorrentesPendentes = async () => {
     const { data: modelosSemTipo, error: modelosSemTipoError } = await supabase
       .from("receitas")
       .select(
-        "id, descricao, valor, categoria_id, bank_account_id, forma_pagamento, data, dia_recorrencia, frequencia_recorrencia, data_fim_recorrencia"
+        "id, descricao, valor, categoria_id, bank_account_id, forma_pagamento, status_recebimento, data, dia_recorrencia, frequencia_recorrencia, data_fim_recorrencia"
       )
       .eq("recorrente", true)
       .is("receita_pai_id", null);
@@ -150,7 +151,7 @@ export const gerarReceitasRecorrentesPendentes = async () => {
         recorrente: false,
         dia_recorrencia: null,
         receita_pai_id: modelo.id,
-        status_recebimento: "pendente",
+        status_recebimento: modelo.status_recebimento || "pendente",
         tipo_receita: modelo.tipo_receita || "variavel",
       });
       jaLancados.add(chaveInicio);
@@ -243,9 +244,14 @@ export const gerarReceitasRecorrentesPendentes = async () => {
     .from("receitas")
     .upsert(insercoes, { onConflict: "receita_pai_id,data", ignoreDuplicates: true });
 
-  // Fallback para bancos sem índice único aplicado e/ou sem coluna tipo_receita.
+  // Fallback para bases sem índice único aplicado.
   if (upsertError) {
-    const insercoesSemTipo = insercoes.map(({ tipo_receita, ...rest }) => rest);
-    await supabase.from("receitas").insert(insercoesSemTipo);
+    const { error: insertError } = await supabase.from("receitas").insert(insercoes);
+
+    // Fallback extra para bases antigas sem a coluna tipo_receita.
+    if (insertError && insertError.message?.includes("tipo_receita")) {
+      const insercoesSemTipo = insercoes.map(({ tipo_receita, ...rest }) => rest);
+      await supabase.from("receitas").insert(insercoesSemTipo);
+    }
   }
 };

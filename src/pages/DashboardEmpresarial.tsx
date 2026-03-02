@@ -1,4 +1,4 @@
-﻿
+
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,19 +8,19 @@ import { TrendingUp, Settings, BarChart3 } from "lucide-react";
 const DashboardEmpresarial = () => {
   const stats = [
     {
-      title: "Receitas no perÃ­odo",
+      title: "Receitas no período",
       value: "R$ 8.300,00",
       change: "+1.0%",
       changeType: "positive"
     },
     {
-      title: "Despesas no perÃ­odo",
+      title: "Despesas no período",
       value: "R$ 516,67",
       change: "Pendente: R$ 0,00",
       changeType: "neutral"
     },
     {
-      title: "Saldo do perÃ­odo",
+      title: "Saldo do período",
       value: "R$ 7.783,33",
       change: "+6.2%",
       changeType: "positive"
@@ -28,7 +28,7 @@ const DashboardEmpresarial = () => {
     {
       title: "Despesas/Receitas",
       value: "6.2%",
-      badge: "SaÃºde Financeira",
+      badge: "Saúde Financeira",
       badgeType: "excellent",
       changeType: "positive"
     }
@@ -52,14 +52,14 @@ const DashboardEmpresarial = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Dashboard Empresarial</h1>
-            <p className="text-gray-600 dark:text-slate-300">VisÃ£o geral das suas finanÃ§as empresariais</p>
+            <p className="text-gray-600 dark:text-slate-300">Visão geral das suas finanças empresariais</p>
           </div>
           <div className="flex items-center space-x-2">
             <Tabs defaultValue="dia" className="w-auto">
               <TabsList>
                 <TabsTrigger value="dia">Dia</TabsTrigger>
                 <TabsTrigger value="semana">Semana</TabsTrigger>
-                <TabsTrigger value="mes">MÃªs</TabsTrigger>
+                <TabsTrigger value="mes">Mês</TabsTrigger>
               </TabsList>
             </Tabs>
             <Button variant="outline">
@@ -76,8 +76,8 @@ const DashboardEmpresarial = () => {
               <BarChart3 className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Resumo Financeiro Empresarial: MarÃ§o/2025</h2>
-              <p className="text-sm text-gray-600 dark:text-slate-300">PerÃ­odo: 01/03/2025 a 31/03/2025 â€¢ Dados atuais</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Resumo Financeiro Empresarial: Março/2025</h2>
+              <p className="text-sm text-gray-600 dark:text-slate-300">Período: 01/03/2025 a 31/03/2025 ⬢ Dados atuais</p>
             </div>
           </div>
         </Card>
@@ -118,11 +118,11 @@ const DashboardEmpresarial = () => {
             <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Fluxo de Caixa Empresarial</h2>
             <Button variant="outline" size="sm">
               <BarChart3 className="w-4 h-4 mr-2" />
-              OpÃ§Ãµes
+              Opções
             </Button>
           </div>
           <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500 dark:text-slate-400">GrÃ¡fico de Fluxo de Caixa</p>
+            <p className="text-gray-500 dark:text-slate-400">Gráfico de Fluxo de Caixa</p>
           </div>
         </Card>
       </div>

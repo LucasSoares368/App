@@ -21,24 +21,24 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          cor?: string | null;
-          created_at?: string;
-          icone?: string | null;
-          id?: string;
+          cor: string | null;
+          created_at: string;
+          icone: string | null;
+          id: string;
           nome: string;
           tipo: Database["public"]["Enums"]["categoria_tipo"];
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          cor?: string | null;
-          created_at?: string;
-          icone?: string | null;
-          id?: string;
-          nome?: string;
-          tipo?: Database["public"]["Enums"]["categoria_tipo"];
-          updated_at?: string;
-          user_id?: string;
+          cor: string | null;
+          created_at: string;
+          icone: string | null;
+          id: string;
+          nome: string;
+          tipo: Database["public"]["Enums"]["categoria_tipo"];
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -54,24 +54,24 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          ativa?: boolean;
-          cor?: string;
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
+          ativa: boolean;
+          cor: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
           nome: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          ativa?: boolean;
-          cor?: string;
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
-          nome?: string;
-          updated_at?: string;
-          user_id?: string;
+          ativa: boolean;
+          cor: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
+          nome: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -87,29 +87,30 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          ativa?: boolean;
-          cor?: string;
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
+          ativa: boolean;
+          cor: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
           nome: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          ativa?: boolean;
-          cor?: string;
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
-          nome?: string;
-          updated_at?: string;
-          user_id?: string;
+          ativa: boolean;
+          cor: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
+          nome: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
       bank_accounts: {
         Row: {
+          account_holder_name: string | null;
           account_type: string;
           balance: number;
           balance_reference_date: string | null;
@@ -124,32 +125,34 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          account_holder_name: string | null;
           account_type: string;
-          balance?: number;
-          balance_reference_date?: string | null;
+          balance: number;
+          balance_reference_date: string | null;
           bank_name: string;
-          created_at?: string;
-          external_id?: string | null;
-          id?: string;
-          last_sync_at?: string | null;
+          created_at: string;
+          external_id: string | null;
+          id: string;
+          last_sync_at: string | null;
           name: string;
-          provider?: string | null;
-          updated_at?: string;
+          provider: string | null;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          account_type?: string;
-          balance?: number;
-          balance_reference_date?: string | null;
-          bank_name?: string;
-          created_at?: string;
-          external_id?: string | null;
-          id?: string;
-          last_sync_at?: string | null;
-          name?: string;
-          provider?: string | null;
-          updated_at?: string;
-          user_id?: string;
+          account_holder_name: string | null;
+          account_type: string;
+          balance: number;
+          balance_reference_date: string | null;
+          bank_name: string;
+          created_at: string;
+          external_id: string | null;
+          id: string;
+          last_sync_at: string | null;
+          name: string;
+          provider: string | null;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -159,6 +162,7 @@ export type Database = {
           bank_name: string | null;
           bank_slug: string | null;
           brand_color: string | null;
+          card_holder_name: string | null;
           closing_day: number;
           created_at: string;
           credit_limit: number;
@@ -173,40 +177,42 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          bank_code?: string | null;
-          bank_name?: string | null;
-          bank_slug?: string | null;
-          brand_color?: string | null;
+          bank_code: string | null;
+          bank_name: string | null;
+          bank_slug: string | null;
+          brand_color: string | null;
+          card_holder_name: string | null;
           closing_day: number;
-          created_at?: string;
-          credit_limit?: number;
+          created_at: string;
+          credit_limit: number;
           due_day: number;
-          external_id?: string | null;
-          id?: string;
-          issuer_bank?: string | null;
-          last_sync_at?: string | null;
+          external_id: string | null;
+          id: string;
+          issuer_bank: string | null;
+          last_sync_at: string | null;
           name: string;
-          provider?: string | null;
-          updated_at?: string;
+          provider: string | null;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          bank_code?: string | null;
-          bank_name?: string | null;
-          bank_slug?: string | null;
-          brand_color?: string | null;
-          closing_day?: number;
-          created_at?: string;
-          credit_limit?: number;
-          due_day?: number;
-          external_id?: string | null;
-          id?: string;
-          issuer_bank?: string | null;
-          last_sync_at?: string | null;
-          name?: string;
-          provider?: string | null;
-          updated_at?: string;
-          user_id?: string;
+          bank_code: string | null;
+          bank_name: string | null;
+          bank_slug: string | null;
+          brand_color: string | null;
+          card_holder_name: string | null;
+          closing_day: number;
+          created_at: string;
+          credit_limit: number;
+          due_day: number;
+          external_id: string | null;
+          id: string;
+          issuer_bank: string | null;
+          last_sync_at: string | null;
+          name: string;
+          provider: string | null;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -222,24 +228,24 @@ export type Database = {
           valor: number;
         };
         Insert: {
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
           descricao: string;
-          id?: string;
-          updated_at?: string;
+          id: string;
+          updated_at: string;
           user_id: string;
           valor: number;
         };
         Update: {
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
-          descricao?: string;
-          id?: string;
-          updated_at?: string;
-          user_id?: string;
-          valor?: number;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
+          descricao: string;
+          id: string;
+          updated_at: string;
+          user_id: string;
+          valor: number;
         };
         Relationships: [
           {
@@ -270,35 +276,35 @@ export type Database = {
         };
         Insert: {
           categoria: string;
-          categoria_id?: string | null;
+          categoria_id: string | null;
           confianca: number;
-          created_at?: string;
+          created_at: string;
           data: string;
           descricao: string;
           file_name: string;
-          id?: string;
-          status?: string;
+          id: string;
+          status: string;
           tipo: string;
-          updated_at?: string;
-          upload_id?: string | null;
+          updated_at: string;
+          upload_id: string | null;
           user_id: string;
           valor: number;
         };
         Update: {
-          categoria?: string;
-          categoria_id?: string | null;
-          confianca?: number;
-          created_at?: string;
-          data?: string;
-          descricao?: string;
-          file_name?: string;
-          id?: string;
-          status?: string;
-          tipo?: string;
-          updated_at?: string;
-          upload_id?: string | null;
-          user_id?: string;
-          valor?: number;
+          categoria: string;
+          categoria_id: string | null;
+          confianca: number;
+          created_at: string;
+          data: string;
+          descricao: string;
+          file_name: string;
+          id: string;
+          status: string;
+          tipo: string;
+          updated_at: string;
+          upload_id: string | null;
+          user_id: string;
+          valor: number;
         };
         Relationships: [
           {
@@ -328,19 +334,19 @@ export type Database = {
         };
         Insert: {
           api_key: string;
-          created_at?: string;
-          id?: string;
-          modelo?: string;
-          updated_at?: string;
+          created_at: string;
+          id: string;
+          modelo: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          api_key?: string;
-          created_at?: string;
-          id?: string;
-          modelo?: string;
-          updated_at?: string;
-          user_id?: string;
+          api_key: string;
+          created_at: string;
+          id: string;
+          modelo: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -356,24 +362,24 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          created_at?: string;
+          created_at: string;
           file_name: string;
           file_size: number;
           file_type: string;
-          id?: string;
+          id: string;
           storage_path: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          created_at?: string;
-          file_name?: string;
-          file_size?: number;
-          file_type?: string;
-          id?: string;
-          storage_path?: string;
-          updated_at?: string;
-          user_id?: string;
+          created_at: string;
+          file_name: string;
+          file_size: number;
+          file_type: string;
+          id: string;
+          storage_path: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -392,30 +398,30 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          categoria_mercado_id?: string | null;
-          created_at?: string;
+          categoria_mercado_id: string | null;
+          created_at: string;
           descricao: string;
-          id?: string;
-          preco_atual?: number | null;
-          quantidade_atual?: number;
-          quantidade_ideal?: number;
-          status?: string;
-          unidade_medida?: string;
-          updated_at?: string;
+          id: string;
+          preco_atual: number | null;
+          quantidade_atual: number;
+          quantidade_ideal: number;
+          status: string;
+          unidade_medida: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          categoria_mercado_id?: string | null;
-          created_at?: string;
-          descricao?: string;
-          id?: string;
-          preco_atual?: number | null;
-          quantidade_atual?: number;
-          quantidade_ideal?: number;
-          status?: string;
-          unidade_medida?: string;
-          updated_at?: string;
-          user_id?: string;
+          categoria_mercado_id: string | null;
+          created_at: string;
+          descricao: string;
+          id: string;
+          preco_atual: number | null;
+          quantidade_atual: number;
+          quantidade_ideal: number;
+          status: string;
+          unidade_medida: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [
           {
@@ -443,32 +449,32 @@ export type Database = {
           veiculo_id: string;
         };
         Insert: {
-          created_at?: string;
-          data_proxima?: string | null;
-          data_realizada?: string | null;
-          id?: string;
-          observacoes?: string | null;
-          quilometragem_proxima?: number | null;
-          quilometragem_realizada?: number | null;
-          status?: string;
+          created_at: string;
+          data_proxima: string | null;
+          data_realizada: string | null;
+          id: string;
+          observacoes: string | null;
+          quilometragem_proxima: number | null;
+          quilometragem_realizada: number | null;
+          status: string;
           tipo_manutencao_id: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
           veiculo_id: string;
         };
         Update: {
-          created_at?: string;
-          data_proxima?: string | null;
-          data_realizada?: string | null;
-          id?: string;
-          observacoes?: string | null;
-          quilometragem_proxima?: number | null;
-          quilometragem_realizada?: number | null;
-          status?: string;
-          tipo_manutencao_id?: string;
-          updated_at?: string;
-          user_id?: string;
-          veiculo_id?: string;
+          created_at: string;
+          data_proxima: string | null;
+          data_realizada: string | null;
+          id: string;
+          observacoes: string | null;
+          quilometragem_proxima: number | null;
+          quilometragem_realizada: number | null;
+          status: string;
+          tipo_manutencao_id: string;
+          updated_at: string;
+          user_id: string;
+          veiculo_id: string;
         };
         Relationships: [
           {
@@ -504,34 +510,34 @@ export type Database = {
           valor_atual: number;
         };
         Insert: {
-          categoria_meta_id?: string | null;
-          created_at?: string;
-          data_inicio?: string;
+          categoria_meta_id: string | null;
+          created_at: string;
+          data_inicio: string;
           data_limite: string;
-          descricao?: string | null;
-          id?: string;
-          status?: string;
+          descricao: string | null;
+          id: string;
+          status: string;
           tipo: string;
           titulo: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
           valor_alvo: number;
-          valor_atual?: number;
+          valor_atual: number;
         };
         Update: {
-          categoria_meta_id?: string | null;
-          created_at?: string;
-          data_inicio?: string;
-          data_limite?: string;
-          descricao?: string | null;
-          id?: string;
-          status?: string;
-          tipo?: string;
-          titulo?: string;
-          updated_at?: string;
-          user_id?: string;
-          valor_alvo?: number;
-          valor_atual?: number;
+          categoria_meta_id: string | null;
+          created_at: string;
+          data_inicio: string;
+          data_limite: string;
+          descricao: string | null;
+          id: string;
+          status: string;
+          tipo: string;
+          titulo: string;
+          updated_at: string;
+          user_id: string;
+          valor_alvo: number;
+          valor_atual: number;
         };
         Relationships: [
           {
@@ -556,26 +562,26 @@ export type Database = {
           valor_orcamento: number;
         };
         Insert: {
-          ativo?: boolean;
-          categoria_despesa?: string;
-          created_at?: string;
-          estimativa_gastos?: number;
-          id?: string;
-          mes_referencia?: string;
-          updated_at?: string;
+          ativo: boolean;
+          categoria_despesa: string;
+          created_at: string;
+          estimativa_gastos: number;
+          id: string;
+          mes_referencia: string;
+          updated_at: string;
           user_id: string;
-          valor_orcamento?: number;
+          valor_orcamento: number;
         };
         Update: {
-          ativo?: boolean;
-          categoria_despesa?: string;
-          created_at?: string;
-          estimativa_gastos?: number;
-          id?: string;
-          mes_referencia?: string;
-          updated_at?: string;
-          user_id?: string;
-          valor_orcamento?: number;
+          ativo: boolean;
+          categoria_despesa: string;
+          created_at: string;
+          estimativa_gastos: number;
+          id: string;
+          mes_referencia: string;
+          updated_at: string;
+          user_id: string;
+          valor_orcamento: number;
         };
         Relationships: [];
       };
@@ -592,26 +598,26 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          avatar_url?: string | null;
-          created_at?: string;
-          endereco?: string | null;
-          id?: string;
+          avatar_url: string | null;
+          created_at: string;
+          endereco: string | null;
+          id: string;
           name: string;
-          organization_name?: string | null;
-          telefone?: string | null;
-          updated_at?: string;
+          organization_name: string | null;
+          telefone: string | null;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          avatar_url?: string | null;
-          created_at?: string;
-          endereco?: string | null;
-          id?: string;
-          name?: string;
-          organization_name?: string | null;
-          telefone?: string | null;
-          updated_at?: string;
-          user_id?: string;
+          avatar_url: string | null;
+          created_at: string;
+          endereco: string | null;
+          id: string;
+          name: string;
+          organization_name: string | null;
+          telefone: string | null;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -636,42 +642,42 @@ export type Database = {
           valor: number;
         };
         Insert: {
-          bank_account_id?: string | null;
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
-          data_fim_recorrencia?: string | null;
-          dia_recorrencia?: number | null;
+          bank_account_id: string | null;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
+          data_fim_recorrencia: string | null;
+          dia_recorrencia: number | null;
           descricao: string;
-          frequencia_recorrencia?: string;
-          forma_pagamento?: string | null;
-          id?: string;
-          receita_pai_id?: string | null;
-          recorrente?: boolean;
-          status_recebimento?: string;
-          tipo_receita?: string;
-          updated_at?: string;
+          frequencia_recorrencia: string;
+          forma_pagamento: string | null;
+          id: string;
+          receita_pai_id: string | null;
+          recorrente: boolean;
+          status_recebimento: string;
+          tipo_receita: string;
+          updated_at: string;
           user_id: string;
           valor: number;
         };
         Update: {
-          bank_account_id?: string | null;
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
-          data_fim_recorrencia?: string | null;
-          dia_recorrencia?: number | null;
-          descricao?: string;
-          frequencia_recorrencia?: string;
-          forma_pagamento?: string | null;
-          id?: string;
-          receita_pai_id?: string | null;
-          recorrente?: boolean;
-          status_recebimento?: string;
-          tipo_receita?: string;
-          updated_at?: string;
-          user_id?: string;
-          valor?: number;
+          bank_account_id: string | null;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
+          data_fim_recorrencia: string | null;
+          dia_recorrencia: number | null;
+          descricao: string;
+          frequencia_recorrencia: string;
+          forma_pagamento: string | null;
+          id: string;
+          receita_pai_id: string | null;
+          recorrente: boolean;
+          status_recebimento: string;
+          tipo_receita: string;
+          updated_at: string;
+          user_id: string;
+          valor: number;
         };
         Relationships: [
           {
@@ -709,24 +715,24 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
           intervalo_km: number;
           nome: string;
           sistema: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          created_at?: string;
-          descricao?: string | null;
-          id?: string;
-          intervalo_km?: number;
-          nome?: string;
-          sistema?: string;
-          updated_at?: string;
-          user_id?: string;
+          created_at: string;
+          descricao: string | null;
+          id: string;
+          intervalo_km: number;
+          nome: string;
+          sistema: string;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -743,26 +749,26 @@ export type Database = {
           valor: number;
         };
         Insert: {
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
           descricao: string;
-          id?: string;
+          id: string;
           tipo: string;
-          updated_at?: string;
+          updated_at: string;
           user_id: string;
           valor: number;
         };
         Update: {
-          categoria_id?: string | null;
-          created_at?: string;
-          data?: string;
-          descricao?: string;
-          id?: string;
-          tipo?: string;
-          updated_at?: string;
-          user_id?: string;
-          valor?: number;
+          categoria_id: string | null;
+          created_at: string;
+          data: string;
+          descricao: string;
+          id: string;
+          tipo: string;
+          updated_at: string;
+          user_id: string;
+          valor: number;
         };
         Relationships: [
           {
@@ -791,31 +797,31 @@ export type Database = {
         };
         Insert: {
           ano: string;
-          combustivel?: string | null;
-          cor?: string | null;
-          created_at?: string;
-          data_aquisicao?: string | null;
-          id?: string;
+          combustivel: string | null;
+          cor: string | null;
+          created_at: string;
+          data_aquisicao: string | null;
+          id: string;
           marca: string;
           modelo: string;
-          placa?: string | null;
-          quilometragem?: number;
-          updated_at?: string;
+          placa: string | null;
+          quilometragem: number;
+          updated_at: string;
           user_id: string;
         };
         Update: {
-          ano?: string;
-          combustivel?: string | null;
-          cor?: string | null;
-          created_at?: string;
-          data_aquisicao?: string | null;
-          id?: string;
-          marca?: string;
-          modelo?: string;
-          placa?: string | null;
-          quilometragem?: number;
-          updated_at?: string;
-          user_id?: string;
+          ano: string;
+          combustivel: string | null;
+          cor: string | null;
+          created_at: string;
+          data_aquisicao: string | null;
+          id: string;
+          marca: string;
+          modelo: string;
+          placa: string | null;
+          quilometragem: number;
+          updated_at: string;
+          user_id: string;
         };
         Relationships: [];
       };
@@ -849,25 +855,25 @@ export type Tables<
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+     keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never
+   ? : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+   (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+     R
+   ? : never
+ ? : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
       DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
+   (DefaultSchema["Tables"] &
       DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
       Row: infer R;
     }
-    ? R
-    : never
-  : never;
+     R
+   ? : never
+ ? : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
@@ -876,21 +882,21 @@ export type TablesInsert<
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never
+     keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+   ? : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+   Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+     I
+   ? : never
+ ? : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+   DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
       Insert: infer I;
     }
-    ? I
-    : never
-  : never;
+     I
+   ? : never
+ ? : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
@@ -899,21 +905,21 @@ export type TablesUpdate<
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never
+     keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+   ? : never = never
 > = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+   Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+     U
+   ? : never
+ ? : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+   DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
       Update: infer U;
     }
-    ? U
-    : never
-  : never;
+     U
+   ? : never
+ ? : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
@@ -922,13 +928,13 @@ export type Enums<
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never;
+     keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+   ? : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database } ?
+   Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+ ? : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"] ?
+   DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+ ? : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
@@ -937,13 +943,13 @@ export type CompositeTypes<
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof Database;
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never;
+     keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+   ? : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database } ?
+   Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+ ? : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] ?
+   DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+ ? : never;
 
 export const Constants = {
   public: {

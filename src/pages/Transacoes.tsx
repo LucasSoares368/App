@@ -11,29 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import {
-  Search,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  DollarSign,
-  Filter,
-} from "lucide-react";
-import { useCategorias } from "@/hooks/useCategorias";
+import { Search, TrendingUp, TrendingDown, Calendar, DollarSign, Filter } from "lucide-react";
 import { useTransacoes } from "@/hooks/useTransacoes";
 
-interface Transacao {
-  id: string;
-  descricao: string;
-  valor: number;
-  categoria: string;
-  data: string;
-  tipo: "receita" | "despesa";
-}
-
 const Transacoes = () => {
-  const { categoriasReceita, categoriasDespesa } = useCategorias();
   const { transacoes } = useTransacoes();
 
   const [filtro, setFiltro] = useState("");
@@ -47,14 +28,13 @@ const Transacoes = () => {
         .includes(filtro.toLowerCase());
       const matchTipo = tipoFiltro === "" || transacao.tipo === tipoFiltro;
       const matchCategoria =
-        categoriaFiltro === "" ||
-        transacao.categorias?.nome === categoriaFiltro;
+        categoriaFiltro === "" || transacao.categorias?.nome === categoriaFiltro;
       return matchDescricao && matchTipo && matchCategoria;
     })
     .sort(
       (a, b) =>
-        new Date(b.data + "T00:00:00").getTime() -
-        new Date(a.data + "T00:00:00").getTime()
+        new Date(`${b.data}T00:00:00`).getTime() -
+        new Date(`${a.data}T00:00:00`).getTime()
     );
 
   const totalReceitas = transacoes
@@ -67,7 +47,7 @@ const Transacoes = () => {
 
   const categorias = [
     ...new Set(transacoes.map((t) => t.categorias?.nome).filter(Boolean)),
-  ];
+  ] as string[];
 
   const limparFiltros = () => {
     setFiltro("");
@@ -78,28 +58,26 @@ const Transacoes = () => {
   return (
     <DashboardLayout>
       <div className="p-4 md:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 md:mb-8">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center md:mb-8">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100">
-              TransaÃ§Ãµes
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 md:text-3xl">
+              Transações
             </h1>
-            <p className="text-sm md:text-base text-gray-600 dark:text-slate-300">
-              VisualizaÃ§Ã£o completa de receitas e despesas
+            <p className="text-sm text-gray-600 dark:text-slate-300 md:text-base">
+              Visualização completa de receitas e despesas
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:mb-8 md:gap-6">
           <Card className="p-4 md:p-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-green-100 rounded-full p-2 md:p-3">
-                <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-green-600" />
+              <div className="rounded-full bg-green-100 p-2 md:p-3">
+                <TrendingUp className="h-5 w-5 text-green-600 md:h-6 md:w-6" />
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-slate-300">
-                  Total Receitas
-                </p>
-                <p className="text-lg md:text-2xl font-bold text-green-600">
+                <p className="text-xs text-gray-600 dark:text-slate-300 md:text-sm">Total Receitas</p>
+                <p className="text-lg font-bold text-green-600 md:text-2xl">
                   R${" "}
                   {totalReceitas.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
@@ -111,14 +89,12 @@ const Transacoes = () => {
 
           <Card className="p-4 md:p-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-red-100 rounded-full p-2 md:p-3">
-                <TrendingDown className="w-5 h-5 md:w-6 md:h-6 text-red-600" />
+              <div className="rounded-full bg-red-100 p-2 md:p-3">
+                <TrendingDown className="h-5 w-5 text-red-600 md:h-6 md:w-6" />
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-slate-300">
-                  Total Despesas
-                </p>
-                <p className="text-lg md:text-2xl font-bold text-red-600">
+                <p className="text-xs text-gray-600 dark:text-slate-300 md:text-sm">Total Despesas</p>
+                <p className="text-lg font-bold text-red-600 md:text-2xl">
                   R${" "}
                   {totalDespesas.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
@@ -136,15 +112,15 @@ const Transacoes = () => {
                 } rounded-full p-2 md:p-3`}
               >
                 <DollarSign
-                  className={`w-5 h-5 md:w-6 md:h-6 ${
+                  className={`h-5 w-5 md:h-6 md:w-6 ${
                     saldoTotal >= 0 ? "text-blue-600" : "text-orange-600"
                   }`}
                 />
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-slate-300">Saldo Total</p>
+                <p className="text-xs text-gray-600 dark:text-slate-300 md:text-sm">Saldo Total</p>
                 <p
-                  className={`text-lg md:text-2xl font-bold ${
+                  className={`text-lg font-bold md:text-2xl ${
                     saldoTotal >= 0 ? "text-blue-600" : "text-orange-600"
                   }`}
                 >
@@ -159,12 +135,12 @@ const Transacoes = () => {
 
           <Card className="p-4 md:p-6">
             <div className="flex items-center space-x-4">
-              <div className="bg-purple-100 rounded-full p-2 md:p-3">
-                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-purple-600" />
+              <div className="rounded-full bg-purple-100 p-2 md:p-3">
+                <Calendar className="h-5 w-5 text-purple-600 md:h-6 md:w-6" />
               </div>
               <div>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-slate-300">TransaÃ§Ãµes</p>
-                <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-slate-100">
+                <p className="text-xs text-gray-600 dark:text-slate-300 md:text-sm">Transações</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-slate-100 md:text-2xl">
                   {transacoes.length}
                 </p>
               </div>
@@ -172,27 +148,27 @@ const Transacoes = () => {
           </Card>
         </div>
 
-        <Card className="p-4 md:p-6 mb-6">
-          <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-slate-100 mb-4">
+        <Card className="mb-6 p-4 md:p-6">
+          <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-slate-100 md:text-lg">
             Filtros
           </h2>
           <div className="flex flex-col space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
               <Input
-                placeholder="Buscar transaÃ§Ãµes..."
+                placeholder="Buscar transações..."
                 value={filtro}
                 onChange={(e) => setFiltro(e.target.value)}
                 className="pl-10"
               />
             </div>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <select
                 id="tipo-filtro"
                 title="Filtrar por tipo"
                 value={tipoFiltro}
                 onChange={(e) => setTipoFiltro(e.target.value)}
-                className="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:border-slate-700 sm:w-48"
               >
                 <option value="">Todos os tipos</option>
                 <option value="receita">Receitas</option>
@@ -203,7 +179,7 @@ const Transacoes = () => {
                 title="Filtrar por categoria"
                 value={categoriaFiltro}
                 onChange={(e) => setCategoriaFiltro(e.target.value)}
-                className="w-full sm:w-48 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 dark:border-slate-700 sm:w-48"
               >
                 <option value="">Todas as categorias</option>
                 {categorias.map((categoria) => (
@@ -212,25 +188,21 @@ const Transacoes = () => {
                   </option>
                 ))}
               </select>
-              <Button
-                variant="outline"
-                onClick={limparFiltros}
-                className="w-full sm:w-auto"
-              >
-                <Filter className="w-4 h-4 mr-2" />
+              <Button variant="outline" onClick={limparFiltros} className="w-full sm:w-auto">
+                <Filter className="mr-2 h-4 w-4" />
                 Limpar Filtros
               </Button>
             </div>
           </div>
         </Card>
 
-        {/* Tabela de TransaÃ§Ãµes - VisÃ­vel apenas em desktop */}
+        {/* Tabela de Transações - Visível apenas em desktop */}
         <div className="hidden md:block">
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>DescriÃ§Ã£o</TableHead>
+                  <TableHead>Descrição</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Data</TableHead>
@@ -240,15 +212,11 @@ const Transacoes = () => {
               <TableBody>
                 {transacoesFiltradas.map((transacao) => (
                   <TableRow key={transacao.id}>
-                    <TableCell className="font-medium">
-                      {transacao.descricao}
-                    </TableCell>
-                    <TableCell>
-                      {transacao.categorias?.nome || "Sem categoria"}
-                    </TableCell>
+                    <TableCell className="font-medium">{transacao.descricao}</TableCell>
+                    <TableCell>{transacao.categorias?.nome || "Sem categoria"}</TableCell>
                     <TableCell>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${
                           transacao.tipo === "receita"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
@@ -258,15 +226,11 @@ const Transacoes = () => {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {new Date(
-                        transacao.data + "T00:00:00"
-                      ).toLocaleDateString("pt-BR")}
+                      {new Date(`${transacao.data}T00:00:00`).toLocaleDateString("pt-BR")}
                     </TableCell>
                     <TableCell
                       className={`text-right font-bold ${
-                        transacao.tipo === "receita"
-                          ? "text-green-600"
-                          : "text-red-600"
+                        transacao.tipo === "receita" ? "text-green-600" : "text-red-600"
                       }`}
                     >
                       {transacao.tipo === "receita" ? "+" : "-"} R${" "}
@@ -281,12 +245,12 @@ const Transacoes = () => {
           </Card>
         </div>
 
-        {/* VisualizaÃ§Ã£o Mobile - Cards */}
-        <div className="md:hidden space-y-4">
+        {/* Visualização Mobile - Cards */}
+        <div className="space-y-4 md:hidden">
           {transacoesFiltradas.length === 0 ? (
             <Card className="p-4">
               <p className="text-center text-gray-500 dark:text-slate-400">
-                Nenhuma transaÃ§Ã£o encontrada.
+                Nenhuma transação encontrada.
               </p>
             </Card>
           ) : (
@@ -303,7 +267,7 @@ const Transacoes = () => {
                       </p>
                     </div>
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
                         transacao.tipo === "receita"
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
@@ -317,18 +281,14 @@ const Transacoes = () => {
                     <div>
                       <p className="text-gray-500 dark:text-slate-400">Data</p>
                       <p className="font-medium">
-                        {new Date(
-                          transacao.data + "T00:00:00"
-                        ).toLocaleDateString("pt-BR")}
+                        {new Date(`${transacao.data}T00:00:00`).toLocaleDateString("pt-BR")}
                       </p>
                     </div>
                     <div>
                       <p className="text-gray-500 dark:text-slate-400">Valor</p>
                       <p
                         className={`font-medium ${
-                          transacao.tipo === "receita"
-                            ? "text-green-600"
-                            : "text-red-600"
+                          transacao.tipo === "receita" ? "text-green-600" : "text-red-600"
                         }`}
                       >
                         {transacao.tipo === "receita" ? "+" : "-"} R${" "}
@@ -349,4 +309,3 @@ const Transacoes = () => {
 };
 
 export default Transacoes;
-

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -56,7 +56,7 @@ const Categorias = () => {
   const [filtro, setFiltro] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("");
 
-  // FormulÃ¡rio para nova categoria
+  // Formulário para nova categoria
   const [novoNome, setNovoNome] = useState("");
   const [novoTipo, setNovoTipo] = useState<"receita" | "despesa">("receita");
   const [novaCor, setNovaCor] = useState("#10B981");
@@ -95,7 +95,7 @@ const Categorias = () => {
       icone: "DollarSign",
     });
 
-    // Limpar formulÃ¡rio
+    // Limpar formulário
     setNovoNome("");
     setNovoTipo("receita");
     setNovaCor("#10B981");
@@ -113,7 +113,7 @@ const Categorias = () => {
   };
 
   const handleToggleCategoria = async (id: string) => {
-    // Como o banco nÃ£o tem campo 'ativa', vamos apenas mostrar um toast
+    // Como o banco não tem campo 'ativa', vamos apenas mostrar um toast
     toast({
       title: "Categoria atualizada",
       description: "Status da categoria alterado com sucesso!",
@@ -128,37 +128,37 @@ const Categorias = () => {
     type CategoriaPadrao = { nome: string; tipo: "receita" | "despesa"; cor: string; icone: string; };
     const categoriasPadrao: CategoriaPadrao[] = [
       // Receitas
-      { nome: 'SalÃ¡rio', tipo: 'receita', cor: '#10B981', icone: 'DollarSign' },
+      { nome: 'Salário', tipo: 'receita', cor: '#10B981', icone: 'DollarSign' },
       { nome: 'Freelance', tipo: 'receita', cor: '#3B82F6', icone: 'Briefcase' },
       { nome: 'Investimentos', tipo: 'receita', cor: '#8B5CF6', icone: 'TrendingUp' },
       { nome: 'Vendas', tipo: 'receita', cor: '#F59E0B', icone: 'ShoppingBag' },
       { nome: 'Aluguel Recebido', tipo: 'receita', cor: '#059669', icone: 'Home' },
       // Despesas
-      { nome: 'AlimentaÃ§Ã£o', tipo: 'despesa', cor: '#EF4444', icone: 'Utensils' },
+      { nome: 'Alimentação', tipo: 'despesa', cor: '#EF4444', icone: 'Utensils' },
       { nome: 'Transporte', tipo: 'despesa', cor: '#F97316', icone: 'Car' },
       { nome: 'Moradia', tipo: 'despesa', cor: '#6366F1', icone: 'Home' },
-      { nome: 'SaÃºde', tipo: 'despesa', cor: '#EC4899', icone: 'Heart' },
-      { nome: 'EducaÃ§Ã£o', tipo: 'despesa', cor: '#14B8A6', icone: 'BookOpen' },
+      { nome: 'Saúde', tipo: 'despesa', cor: '#EC4899', icone: 'Heart' },
+      { nome: 'Educação', tipo: 'despesa', cor: '#14B8A6', icone: 'BookOpen' },
       { nome: 'Lazer', tipo: 'despesa', cor: '#8B5CF6', icone: 'Gamepad2' },
       { nome: 'Roupas', tipo: 'despesa', cor: '#F59E0B', icone: 'Shirt' },
       { nome: 'Tecnologia', tipo: 'despesa', cor: '#6B7280', icone: 'Smartphone' },
-      { nome: 'ServiÃ§os', tipo: 'despesa', cor: '#84CC16', icone: 'Settings' },
+      { nome: 'Serviços', tipo: 'despesa', cor: '#84CC16', icone: 'Settings' },
     ];
 
     try {
-      // O hook useCategorias jÃ¡ lida com o user_id
+      // O hook useCategorias já lida com o user_id
       for (const categoria of categoriasPadrao) {
         await createCategoria(categoria);
       }
       toast({
         title: "Sucesso!",
-        description: "Categorias padrÃ£o importadas com sucesso.",
+        description: "Categorias padrão importadas com sucesso.",
       });
     } catch (error) {
-      console.error("Erro ao importar categorias padrÃ£o:", error);
+      console.error("Erro ao importar categorias padrão:", error);
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel importar as categorias padrÃ£o. Tente novamente.",
+        description: "Não foi possível importar as categorias padrão. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -197,7 +197,7 @@ const Categorias = () => {
               className="w-full sm:w-auto"
             >
               <Download className="w-4 h-4 mr-2" />
-              Importar Categorias PadrÃ£o
+              Importar Categorias Padrão
             </Button>
             <Button
               onClick={() => setActiveTab("adicionar")}
@@ -311,7 +311,7 @@ const Categorias = () => {
               </div>
             </Card>
 
-            {/* Tabela de Categorias - VisÃ­vel apenas em desktop */}
+            {/* Tabela de Categorias - Visível apenas em desktop */}
             <div className="hidden md:block">
               <Card>
                 <Table>
@@ -319,9 +319,9 @@ const Categorias = () => {
                     <TableRow>
                       <TableHead>Categoria</TableHead>
                       <TableHead>Tipo</TableHead>
-                      <TableHead>DescriÃ§Ã£o</TableHead>
+                      <TableHead>Descrição</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead className="text-right">AÃ§Ãµes</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -340,17 +340,17 @@ const Categorias = () => {
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${
                               categoria.tipo === "receita"
-                                ? "bg-green-100 text-green-800"
+                                ?"bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
                             {categoria.tipo === "receita"
-                              ? "Receita"
+                              ?"Receita"
                               : "Despesa"}
                           </span>
                         </TableCell>
                         <TableCell className="text-gray-600 dark:text-slate-300">
-                          Sem descriÃ§Ã£o
+                          Sem descrição
                         </TableCell>
                         <TableCell>
                           <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -376,7 +376,7 @@ const Categorias = () => {
                                   </AlertDialogTitle>
                                   <AlertDialogDescription>
                                     Tem certeza que deseja excluir a categoria "
-                                    {categoria.nome}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                    {categoria.nome}"? Esta ação não pode ser
                                     desfeita.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
@@ -404,9 +404,9 @@ const Categorias = () => {
               </Card>
             </div>
 
-            {/* VisualizaÃ§Ã£o Mobile - Cards */}
+            {/* Visualização Mobile - Cards */}
             <div className="md:hidden space-y-4">
-              {categoriasFiltradas.length === 0 ? (
+              {categoriasFiltradas.length === 0 ?(
                 <Card className="p-4">
                   <p className="text-center text-gray-500 dark:text-slate-400">
                     Nenhuma categoria encontrada.
@@ -427,18 +427,18 @@ const Categorias = () => {
                               {categoria.nome}
                             </h3>
                             <p className="text-sm text-gray-500 dark:text-slate-400">
-                              Sem descriÃ§Ã£o
+                              Sem descrição
                             </p>
                           </div>
                         </div>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             categoria.tipo === "receita"
-                              ? "bg-green-100 text-green-800"
+                              ?"bg-green-100 text-green-800"
                               : "bg-red-100 text-red-800"
                           }`}
                         >
-                          {categoria.tipo === "receita" ? "Receita" : "Despesa"}
+                          {categoria.tipo === "receita" ?"Receita" : "Despesa"}
                         </span>
                       </div>
 
@@ -464,7 +464,7 @@ const Categorias = () => {
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
                                   Tem certeza que deseja excluir a categoria "
-                                  {categoria.nome}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                  {categoria.nome}"? Esta ação não pode ser
                                   desfeita.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
@@ -504,7 +504,7 @@ const Categorias = () => {
                     <Label htmlFor="nome">Nome da Categoria *</Label>
                     <Input
                       id="nome"
-                      placeholder="Ex: AlimentaÃ§Ã£o, SalÃ¡rio..."
+                      placeholder="Ex: Alimentação, Salário..."
                       value={novoNome}
                       onChange={(e) => setNovoNome(e.target.value)}
                     />
@@ -553,10 +553,10 @@ const Categorias = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="descricao">DescriÃ§Ã£o</Label>
+                    <Label htmlFor="descricao">Descrição</Label>
                     <Input
                       id="descricao"
-                      placeholder="DescriÃ§Ã£o opcional..."
+                      placeholder="Descrição opcional..."
                       value={novaDescricao}
                       onChange={(e) => setNovaDescricao(e.target.value)}
                     />

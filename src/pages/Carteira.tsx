@@ -1,11 +1,20 @@
-﻿
+
 import { useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { MonthYearCalendarPicker } from "@/components/MonthYearCalendarPicker";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -36,11 +45,14 @@ import {
 import {
   Building2,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CreditCard,
   DollarSign,
   Edit,
   Loader2,
   Plus,
+  Trash,
   Trash2,
   Wallet,
 } from "lucide-react";
@@ -69,6 +81,14 @@ const contaTipoLabel: Record<BankAccountType, string> = {
   corrente: "Corrente",
   poupanca: "Poupanca",
   investimento: "Investimento",
+  digital: "Digital",
+};
+
+const contaTipoBadgeClass: Record<BankAccountType, string> = {
+  corrente: "bg-blue-500/20 text-blue-400",
+  poupanca: "bg-green-500/20 text-green-400",
+  investimento: "bg-purple-500/20 text-purple-400",
+  digital: "bg-orange-500/20 text-orange-400",
 };
 
 type CreditExpenseRow = {
@@ -82,10 +102,24 @@ type CreditExpenseRow = {
   cartao_id: string | null;
 };
 
+type PaidExpenseRow = {
+  valor: number | null;
+  data: string | null;
+  forma_pagamento: string | null;
+  status_pagamento: string | null;
+  recorrente: boolean | null;
+  despesa_pai_id: string | null;
+};
+
 type CardWithUsage = {
   id: string;
   name: string;
+  card_holder_name: string | null;
   issuer_bank: string | null;
+  bank_name: string | null;
+  bank_code: string | null;
+  bank_slug: string | null;
+  brand_color: string | null;
   credit_limit: number;
   closing_day: number;
   due_day: number;
@@ -111,19 +145,32 @@ const getBankOptionMeta = (bank: BankOption) => {
   return parts.join(" • ");
 };
 
-const UtilizationBar = ({ value }: { value: number }) => {
+const UtilizationBar = ({
+  value,
+  brandColor,
+}: {
+  value: number;
+  brandColor: string | null;
+}) => {
   const bounded = Math.max(0, Math.min(100, value));
-  const barColor =
-    bounded >= 85 ? "bg-red-500" : bounded >= 60 ? "bg-amber-500" : "bg-emerald-500";
+  const baseColor =
+    bounded >= 90 ?
+       "#EF4444"
+     : bounded >= 70 ?
+         "#F97316"
+       : bounded >= 40 ?
+           "#F59E0B"
+         : brandColor || "#22C55E";
 
   return (
-    <div className="flex min-w-[140px] items-center gap-2">
-      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
-        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${bounded}%` }} />
-      </div>
-      <span className="text-xs font-semibold tabular-nums text-slate-600 dark:text-slate-300">
-        {formatPercent(value)}
-      </span>
+    <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-slate-800">
+      <div
+        className="h-full rounded-full transition-all duration-500"
+        style={{
+          width: `${bounded}%`,
+          backgroundColor: baseColor,
+        }}
+      />
     </div>
   );
 };
@@ -135,7 +182,7 @@ const WalletSummaryCard = ({
   hint,
   iconClassName,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className: string }>;
   label: string;
   value: string;
   hint: string;
@@ -159,6 +206,45 @@ const WalletSummaryCard = ({
   </Card>
 );
 
+const BankLogoBadge = ({
+  bankName,
+  bankCode,
+  bankSlug,
+  size = "sm",
+}: {
+  bankName: string;
+  bankCode: string | null;
+  bankSlug: string | null;
+  size: "sm" | "lg";
+}) => {
+  const resolvedSlug = bankSlug || resolveBankSlug(bankName, bankCode || undefined);
+  const asset = getBankAssetBySlug(resolvedSlug);
+  const initials = getBankInitials(bankName);
+  const containerClass =
+    size === "lg" ?
+       "h-11 w-11 rounded-xl"
+     : "h-7 w-7 rounded-full";
+  const imageClass = size === "lg" ? "h-6 w-6 object-contain" : "h-4 w-4 object-contain";
+  const initialsClass =
+    size === "lg" ?
+       "text-sm font-bold"
+     : "text-[10px] font-semibold";
+
+  if (asset?.logo) {
+    return (
+      <span className={`flex shrink-0 items-center justify-center bg-white ring-1 ring-slate-200 dark:ring-slate-700 ${containerClass}`}>
+        <img src={asset.logo} alt={`Logo ${bankName}`} className={imageClass} />
+      </span>
+    );
+  }
+
+  return (
+    <span className={`flex shrink-0 items-center justify-center bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 ${containerClass} ${initialsClass}`}>
+      {initials}
+    </span>
+  );
+};
+
 const EmptyState = ({
   icon: Icon,
   title,
@@ -166,7 +252,7 @@ const EmptyState = ({
   actionLabel,
   onAction,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className: string }>;
   title: string;
   description: string;
   actionLabel: string;
@@ -197,12 +283,22 @@ const Carteira = () => {
 
   const [activeTab, setActiveTab] = useState<"cards" | "accounts">("cards");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [mesReferencia, setMesReferencia] = useState(() => {
+    const hoje = new Date();
+    return new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  });
   const [creditUsageMonth, setCreditUsageMonth] = useState(0);
   const [creditUsageByCard, setCreditUsageByCard] = useState<Record<string, number>>({});
+  const [receivedIncomeMonth, setReceivedIncomeMonth] = useState(0);
+  const [expectedIncomeMonth, setExpectedIncomeMonth] = useState(0);
+  const [receivedIncomeByAccount, setReceivedIncomeByAccount] = useState<Record<string, number>>({});
+  const [expectedIncomeByAccount, setExpectedIncomeByAccount] = useState<Record<string, number>>({});
+  const [paidExpensesTotal, setPaidExpensesTotal] = useState(0);
 
   const [cardEditingId, setCardEditingId] = useState<string | null>(null);
   const [cardForm, setCardForm] = useState({
     name: "",
+    card_holder_name: "",
     bank_name: "",
     bank_code: "",
     bank_slug: "",
@@ -218,11 +314,19 @@ const Carteira = () => {
   const [bankSuggestions, setBankSuggestions] = useState<BankOption[]>([]);
   const [bankSearchLoading, setBankSearchLoading] = useState(false);
   const [bankOptionsOpen, setBankOptionsOpen] = useState(false);
+  const [accountBankQuery, setAccountBankQuery] = useState("");
+  const [accountBankSuggestions, setAccountBankSuggestions] = useState<BankOption[]>([]);
+  const [accountBankSearchLoading, setAccountBankSearchLoading] = useState(false);
+  const [accountBankOptionsOpen, setAccountBankOptionsOpen] = useState(false);
 
   const [accountEditingId, setAccountEditingId] = useState<string | null>(null);
   const [accountForm, setAccountForm] = useState({
     name: "",
+    account_holder_name: "",
     bank_name: "",
+    bank_code: "",
+    bank_slug: "",
+    brand_color: "",
     account_type: "corrente" as BankAccountType,
     balance: "",
     balance_reference_date: "",
@@ -233,6 +337,7 @@ const Carteira = () => {
     setCardEditingId(null);
     setCardForm({
       name: "",
+      card_holder_name: "",
       bank_name: "",
       bank_code: "",
       bank_slug: "",
@@ -250,11 +355,18 @@ const Carteira = () => {
     setAccountEditingId(null);
     setAccountForm({
       name: "",
+      account_holder_name: "",
       bank_name: "",
-      account_type: "corrente",
+      bank_code: "",
+      bank_slug: "",
+      brand_color: "",
+      account_type: "corrente" as BankAccountType,
       balance: "",
       balance_reference_date: "",
     });
+    setAccountBankQuery("");
+    setAccountBankSuggestions([]);
+    setAccountBankOptionsOpen(false);
   };
 
   const openCreateDialog = () => {
@@ -273,6 +385,7 @@ const Carteira = () => {
     const currentBankName = card.issuer_bank || "";
     setCardForm({
       name: card.name,
+      card_holder_name: card.card_holder_name || "",
       bank_name: (card.bank_name || currentBankName) as string,
       bank_code: card.bank_code || "",
       bank_slug: card.bank_slug || "",
@@ -291,18 +404,55 @@ const Carteira = () => {
     setAccountEditingId(id);
     setAccountForm({
       name: account.name,
+      account_holder_name: account.account_holder_name || "",
       bank_name: account.bank_name,
+      bank_code: "",
+      bank_slug: resolveBankSlug(account.bank_name) || "",
+      brand_color: getBankAssetBySlug(resolveBankSlug(account.bank_name))?.color || "",
       account_type: account.account_type,
       balance: String(account.balance),
       balance_reference_date: account.balance_reference_date || "",
     });
+    setAccountBankQuery(account.bank_name);
     setDialogOpen(true);
   };
 
+  const aplicarMesReferencia = (date: Date) => {
+    const novoMes = new Date(date.getFullYear(), date.getMonth(), 1);
+    setMesReferencia(novoMes);
+  };
+
+  const navegarMes = (direcao: number) => {
+    const proximoMes = new Date(
+      mesReferencia.getFullYear(),
+      mesReferencia.getMonth() + direcao,
+      1
+    );
+    aplicarMesReferencia(proximoMes);
+  };
+
+  const mesReferenciaLabel = useMemo(() => {
+    return new Intl.DateTimeFormat("pt-BR", {
+      month: "long",
+      year: "numeric",
+    }).format(mesReferencia);
+  }, [mesReferencia]);
+
   const loadCreditUsageMonth = async () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+    const firstDay = new Date(
+      mesReferencia.getFullYear(),
+      mesReferencia.getMonth(),
+      1
+    )
+      .toISOString()
+      .split("T")[0];
+    const lastDay = new Date(
+      mesReferencia.getFullYear(),
+      mesReferencia.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split("T")[0];
 
     const { data, error } = await supabase
       .from("despesas")
@@ -341,8 +491,8 @@ const Carteira = () => {
           `installments:${item.cartao_id || "no-card"}:${createdDate}:${item.data || "no-date"}`;
         const prev = grouped.get(key);
         grouped.set(key, {
-          total: (prev?.total || 0) + value,
-          cardId: item.cartao_id || prev?.cardId || null,
+          total: (prev.total || 0) + value,
+          cardId: item.cartao_id || prev.cardId || null,
         });
         continue;
       }
@@ -368,12 +518,125 @@ const Carteira = () => {
     setCreditUsageByCard(byCard);
   };
 
-  useEffect(() => {
-    loadCreditUsageMonth();
-  }, []);
+  const loadExpectedIncomeMonth = async () => {
+    const endOfMonth = new Date(
+      mesReferencia.getFullYear(),
+      mesReferencia.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split("T")[0];
+
+    const { data, error } = await supabase
+      .from("receitas")
+      .select("valor, bank_account_id, status_recebimento, data, recorrente, receita_pai_id")
+      .eq("recorrente", false)
+      .not("bank_account_id", "is", null)
+      .lte("data", endOfMonth);
+
+    if (error) {
+      toast({
+        title: "Erro ao carregar receitas previstas",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let receivedTotal = 0;
+    let pendingTotal = 0;
+    const receivedByAccount: Record<string, number> = {};
+    const pendingByAccount: Record<string, number> = {};
+    const referenceByAccount = new Map(
+      accounts.map((account) => [
+        account.id,
+        account.balance_reference_date
+          ? account.balance_reference_date.split("T")[0]
+          : null,
+      ])
+    );
+
+    for (const item of data || []) {
+      const value = Number(item.valor || 0);
+      const accountId = item.bank_account_id;
+      const dataReceita = item.data ? item.data.split("T")[0] : null;
+      if (!accountId || Number.isNaN(value)) continue;
+      if (!dataReceita) continue;
+
+      const accountReferenceDate = referenceByAccount.get(accountId);
+      if (accountReferenceDate && dataReceita <= accountReferenceDate) {
+        continue;
+      }
+
+      if (item.status_recebimento === "recebido") {
+        receivedTotal += value;
+        receivedByAccount[accountId] = (receivedByAccount[accountId] || 0) + value;
+      } else {
+        pendingTotal += value;
+        pendingByAccount[accountId] = (pendingByAccount[accountId] || 0) + value;
+      }
+    }
+
+    setReceivedIncomeMonth(receivedTotal);
+    setExpectedIncomeMonth(pendingTotal);
+    setReceivedIncomeByAccount(receivedByAccount);
+    setExpectedIncomeByAccount(pendingByAccount);
+  };
+
+  const loadPaidExpensesTotal = async () => {
+    const endOfMonth = new Date(
+      mesReferencia.getFullYear(),
+      mesReferencia.getMonth() + 1,
+      0
+    )
+      .toISOString()
+      .split("T")[0];
+    let total = 0;
+
+    const { data: despesasData, error: despesasError } = await supabase
+      .from("despesas")
+      .select("valor, data, forma_pagamento, status_pagamento, recorrente, despesa_pai_id")
+      .lte("data", endOfMonth);
+
+    if (!despesasError) {
+      const rows = (despesasData || []) as PaidExpenseRow[];
+      total += rows.reduce((sum, item) => {
+        const isRecurringModel = Boolean(item.recorrente && !item.despesa_pai_id);
+        if (isRecurringModel) return sum;
+        if (item.status_pagamento !== "pago") return sum;
+        if ((item.forma_pagamento || "").toLowerCase() === "credito") return sum;
+
+        const value = Number(item.valor || 0);
+        if (!Number.isFinite(value) || value <= 0) return sum;
+        return sum + value;
+      }, 0);
+    }
+
+    const { data: transacoesData, error: transacoesError } = await supabase
+      .from("transacoes")
+      .select("valor")
+      .eq("tipo", "despesa")
+      .lte("data", endOfMonth);
+
+    if (!transacoesError) {
+      total += (transacoesData || []).reduce((sum, item) => {
+        const value = Number(item.valor || 0);
+        if (!Number.isFinite(value) || value <= 0) return sum;
+        return sum + value;
+      }, 0);
+    }
+
+    setPaidExpensesTotal(total);
+  };
 
   useEffect(() => {
-    if (!dialogOpen || !isCardsTab || banksInitialized) return;
+    loadCreditUsageMonth();
+    loadExpectedIncomeMonth();
+    loadPaidExpensesTotal();
+  }, [mesReferencia, accounts]);
+
+  useEffect(() => {
+    if (!dialogOpen || banksInitialized) return;
 
     let active = true;
     setBanksLoading(true);
@@ -391,7 +654,7 @@ const Carteira = () => {
     return () => {
       active = false;
     };
-  }, [banksInitialized, dialogOpen, isCardsTab]);
+  }, [banksInitialized, dialogOpen]);
 
   useEffect(() => {
     if (!dialogOpen || !isCardsTab) return;
@@ -422,6 +685,35 @@ const Carteira = () => {
     };
   }, [bankQuery, banks, dialogOpen, isCardsTab]);
 
+  useEffect(() => {
+    if (!dialogOpen || isCardsTab) return;
+
+    setAccountBankSearchLoading(true);
+    const timeoutId = window.setTimeout(() => {
+      const query = normalizeBankText(accountBankQuery);
+      if (!query) {
+        setAccountBankSuggestions(banks.slice(0, 8));
+        setAccountBankSearchLoading(false);
+        return;
+      }
+
+      const filtered = banks
+        .filter((bank) => {
+          const codeLabel = bank.code ? `codigo ${bank.code}` : "";
+          const source = `${bank.name} ${bank.fullName} ${codeLabel} ${bank.ispb}`;
+          return normalizeBankText(source).includes(query);
+        })
+        .slice(0, 8);
+
+      setAccountBankSuggestions(filtered);
+      setAccountBankSearchLoading(false);
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [accountBankQuery, banks, dialogOpen, isCardsTab]);
+
   const cardsWithUsage = useMemo<CardWithUsage[]>(
     () =>
       cards.map((card) => {
@@ -432,7 +724,12 @@ const Carteira = () => {
         return {
           id: card.id,
           name: card.name,
+          card_holder_name: card.card_holder_name,
           issuer_bank: card.issuer_bank,
+          bank_name: card.bank_name,
+          bank_code: card.bank_code,
+          bank_slug: card.bank_slug,
+          brand_color: card.brand_color,
           credit_limit: creditLimit,
           closing_day: card.closing_day,
           due_day: card.due_day,
@@ -457,15 +754,48 @@ const Carteira = () => {
   }, [cardsWithUsage]);
 
   const accountsKpis = useMemo(() => {
-    const totalBalance = accounts.reduce((sum, account) => sum + Number(account.balance || 0), 0);
-    const sorted = [...accounts].sort((a, b) => b.balance - a.balance);
+    const baseBalance = accounts.reduce(
+      (sum, account) => sum + Number(account.balance || 0),
+      0
+    );
+    const realBalance = baseBalance + receivedIncomeMonth - paidExpensesTotal;
+
+    const sorted = [...accounts].sort((a, b) => {
+      const balanceA =
+        Number(a.balance || 0) + Number(receivedIncomeByAccount[a.id] || 0);
+      const balanceB =
+        Number(b.balance || 0) + Number(receivedIncomeByAccount[b.id] || 0);
+      return balanceB - balanceA;
+    });
+
     return {
-      totalBalance,
+      totalBalance: baseBalance,
+      realBalance,
+      paidExpenses: paidExpensesTotal,
+      receivedIncome: receivedIncomeMonth,
+      expectedIncome: expectedIncomeMonth,
+      projectedBalance: realBalance + expectedIncomeMonth,
       accountsCount: accounts.length,
       highest: sorted[0] || null,
       lowest: sorted[sorted.length - 1] || null,
     };
-  }, [accounts]);
+  }, [
+    accounts,
+    expectedIncomeMonth,
+    paidExpensesTotal,
+    receivedIncomeMonth,
+    receivedIncomeByAccount,
+  ]);
+
+  const currentBalanceByAccount = useMemo(() => {
+    const byAccount: Record<string, number> = {};
+    for (const account of accounts) {
+      byAccount[account.id] =
+        Number(account.balance || 0) +
+        Number(receivedIncomeByAccount[account.id] || 0);
+    }
+    return byAccount;
+  }, [accounts, receivedIncomeByAccount]);
 
   const resolvedBankSlug = useMemo(
     () => resolveBankSlug(cardForm.bank_name, cardForm.bank_code) || cardForm.bank_slug || null,
@@ -477,6 +807,25 @@ const Carteira = () => {
     [bankAsset?.color, cardForm.brand_color, cardForm.bank_name]
   );
   const bankInitials = useMemo(() => getBankInitials(cardForm.bank_name), [cardForm.bank_name]);
+  const accountBankSlug = useMemo(
+    () => accountForm.bank_slug || resolveBankSlug(accountForm.bank_name, accountForm.bank_code) || null,
+    [accountForm.bank_slug, accountForm.bank_name, accountForm.bank_code]
+  );
+  const accountBankAsset = useMemo(
+    () => getBankAssetBySlug(accountBankSlug),
+    [accountBankSlug]
+  );
+  const accountBankInitials = useMemo(
+    () => getBankInitials(accountForm.bank_name),
+    [accountForm.bank_name]
+  );
+  const accountBrandColor = useMemo(
+    () =>
+      accountForm.brand_color ||
+      accountBankAsset?.color ||
+      generateBankColor(accountForm.bank_name),
+    [accountForm.brand_color, accountBankAsset?.color, accountForm.bank_name]
+  );
 
   const handleSaveCard = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -492,6 +841,7 @@ const Carteira = () => {
 
     const payload = {
       name: cardForm.name.trim(),
+      card_holder_name: cardForm.card_holder_name.trim() || null,
       issuer_bank: cardForm.bank_name.trim() || null,
       bank_name: cardForm.bank_name.trim() || null,
       bank_code: cardForm.bank_code.trim() || null,
@@ -530,6 +880,7 @@ const Carteira = () => {
 
     const payload = {
       name: accountForm.name.trim(),
+      account_holder_name: accountForm.account_holder_name.trim() || null,
       bank_name: accountForm.bank_name.trim(),
       account_type: accountForm.account_type,
       balance: Number(accountForm.balance),
@@ -566,13 +917,50 @@ const Carteira = () => {
               Acompanhe limites, uso mensal e saldo das suas contas em um unico painel.
             </p>
           </div>
-          <Button
-            onClick={openCreateDialog}
-            className="h-11 w-full bg-orange-500 px-5 text-sm font-semibold shadow-sm transition hover:bg-orange-600 hover:shadow-md sm:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {isCardsTab ? "Novo Cartao" : "Nova Conta"}
-          </Button>
+          <div className="flex w-full flex-row items-center justify-end gap-2 sm:w-auto">
+            <div className="flex h-14 items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50/70 px-3 dark:border-slate-700 dark:bg-slate-900/40">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => navegarMes(-1)}
+                aria-label="Mês anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-9 px-2 text-sm font-semibold text-gray-900 dark:text-slate-100"
+                    aria-label="Selecionar mês no calendário"
+                  >
+                    {mesReferenciaLabel}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center">
+                  <MonthYearCalendarPicker value={mesReferencia} onSelect={aplicarMesReferencia} />
+                </PopoverContent>
+              </Popover>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => navegarMes(1)}
+                aria-label="Próximo mês"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button
+              onClick={openCreateDialog}
+              className="h-14 w-auto bg-orange-500 px-5 text-sm font-semibold shadow-sm transition hover:bg-orange-600 hover:shadow-md"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {isCardsTab ? "Novo Cartao" : "Nova Conta"}
+            </Button>
+          </div>
         </div>
 
         <Tabs
@@ -598,7 +986,6 @@ const Carteira = () => {
               <WalletSummaryCard icon={DollarSign} label="Uso no Mes" value={formatCurrency(cardsKpis.usedMonth)} hint="Neste mes" iconClassName="bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-300" />
               <WalletSummaryCard icon={Building2} label="Disponivel" value={formatCurrency(cardsKpis.available)} hint="Limite restante" iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300" />
             </div>
-
             <div className="h-8" />
             <div>
               {cardsWithUsage.length === 0 ? (
@@ -609,14 +996,13 @@ const Carteira = () => {
                   actionLabel="Adicionar Cartao"
                   onAction={openCreateDialog}
                 />
-              ) : (
+             ) : (
                 <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
                   <div className="hidden md:block">
                     <Table>
-                      <TableHeader className="bg-muted/50">
+                      <TableHeader>
                         <TableRow>
                           <TableHead>Cartao</TableHead>
-                          <TableHead>Banco</TableHead>
                           <TableHead className="text-right">Limite</TableHead>
                           <TableHead className="text-right">Uso no mes</TableHead>
                           <TableHead className="text-right">Disponivel</TableHead>
@@ -627,19 +1013,49 @@ const Carteira = () => {
                       </TableHeader>
                       <TableBody>
                         {cardsWithUsage.map((card) => (
-                          <TableRow key={card.id}>
-                            <TableCell className="font-medium">{card.name}</TableCell>
-                            <TableCell>{card.issuer_bank || "-"}</TableCell>
+                          <TableRow key={card.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-slate-800 dark:hover:bg-slate-900/40">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <BankLogoBadge
+                                  bankName={card.bank_name || card.issuer_bank || card.name}
+                                  bankCode={card.bank_code}
+                                  bankSlug={card.bank_slug}
+                                  size="lg"
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-slate-900 dark:text-slate-100">{card.name}</p>
+                                  <p className="truncate text-sm text-gray-500 dark:text-slate-400">{card.issuer_bank || "-"}</p>
+                                  {card.card_holder_name ? (
+                                    <p className="truncate text-xs text-gray-400 dark:text-slate-500">
+                                      {card.card_holder_name}
+                                    </p>
+                                 ) : null}
+                                </div>
+                              </div>
+                            </TableCell>
                             <TableCell className="text-right tabular-nums">{formatCurrency(card.credit_limit)}</TableCell>
                             <TableCell className="text-right tabular-nums text-red-600">{formatCurrency(card.usedMonth)}</TableCell>
                             <TableCell className="text-right tabular-nums text-emerald-600">{formatCurrency(card.available)}</TableCell>
-                            <TableCell><UtilizationBar value={card.utilization} /></TableCell>
+                            <TableCell><UtilizationBar value={card.utilization} brandColor={card.brand_color} /></TableCell>
                             <TableCell className="text-sm text-slate-600 dark:text-slate-300">Fecha dia {card.closing_day} • Vence dia {card.due_day}</TableCell>
                             <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-2">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
+                                <button
+                                  type="button"
+                                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                                  onClick={() => openEditCard(card.id)}
+                                >
+                                  <Edit size={16} />
+                                </button>
                                 <AlertDialog>
-                                  <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                                    >
+                                      <Trash size={16} />
+                                    </button>
+                                  </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
                                     <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
@@ -657,11 +1073,37 @@ const Carteira = () => {
                     {cardsWithUsage.map((card) => (
                       <Card key={card.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
                         <div className="mb-3 flex items-start justify-between gap-2">
-                          <div><p className="font-semibold text-slate-900 dark:text-slate-100">{card.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{card.issuer_bank || "Sem banco"}</p></div>
+                          <div>
+                            <p className="font-semibold text-slate-900 dark:text-slate-100">{card.name}</p>
+                            <div className="mt-1 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                              <BankLogoBadge
+                                bankName={card.bank_name || card.issuer_bank || card.name}
+                                bankCode={card.bank_code}
+                                bankSlug={card.bank_slug}
+                              />
+                              <p>{card.issuer_bank || "Sem banco"}</p>
+                            </div>
+                            {card.card_holder_name ? (
+                              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{card.card_holder_name}</p>
+                           ) : null}
+                          </div>
                           <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditCard(card.id)}><Edit className="h-4 w-4" /></Button>
+                            <button
+                              type="button"
+                              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                              onClick={() => openEditCard(card.id)}
+                            >
+                              <Edit size={16} />
+                            </button>
                             <AlertDialog>
-                              <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                              <AlertDialogTrigger asChild>
+                                <button
+                                  type="button"
+                                  className="p-2 rounded-lg hover:bg-red-50 text-red-500 transition-colors"
+                                >
+                                  <Trash size={16} />
+                                </button>
+                              </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader><AlertDialogTitle>Excluir cartao</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader>
                                 <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => { await deleteCard(card.id); await loadCreditUsageMonth(); }}>Excluir</AlertDialogAction></AlertDialogFooter>
@@ -676,7 +1118,7 @@ const Carteira = () => {
                           <div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Disponivel</span><span className="font-semibold tabular-nums text-emerald-600">{formatCurrency(card.available)}</span></div>
                         </div>
 
-                        <div className="mt-3"><UtilizationBar value={card.utilization} /><p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha dia {card.closing_day} • Vence dia {card.due_day}</p></div>
+                        <div className="mt-3"><UtilizationBar value={card.utilization} brandColor={card.brand_color} /><p className="mt-2 text-xs text-slate-500 dark:text-slate-400">Fecha dia {card.closing_day} • Vence dia {card.due_day}</p></div>
                       </Card>
                     ))}
                   </div>
@@ -684,15 +1126,27 @@ const Carteira = () => {
               )}
             </div>
           </>
-          ) : (
+         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-4">
-              <WalletSummaryCard icon={DollarSign} label="Saldo Total" value={formatCurrency(accountsKpis.totalBalance)} hint="Total em contas" iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300" />
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-5">
+              <WalletSummaryCard
+                icon={DollarSign}
+                label="Saldo Total"
+                value={formatCurrency(accountsKpis.realBalance)}
+                hint={`+${formatCurrency(accountsKpis.receivedIncome)} recebidas • -${formatCurrency(accountsKpis.paidExpenses)} despesas pagas`}
+                iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300"
+              />
+              <WalletSummaryCard
+                icon={DollarSign}
+                label="Saldo Previsto"
+                value={formatCurrency(accountsKpis.projectedBalance)}
+                hint={`${formatCurrency(accountsKpis.expectedIncome)} em receitas previstas`}
+                iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"
+              />
               <WalletSummaryCard icon={Wallet} label="Contas" value={String(accountsKpis.accountsCount)} hint="Ativas" iconClassName="bg-orange-100 text-orange-600 dark:bg-orange-500/20 dark:text-orange-300" />
-              <WalletSummaryCard icon={Building2} label="Maior Saldo" value={accountsKpis.highest ? formatCurrency(accountsKpis.highest.balance) : "-"} hint={accountsKpis.highest?.name || "Sem conta"} iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300" />
-              <WalletSummaryCard icon={Building2} label="Menor Saldo" value={accountsKpis.lowest ? formatCurrency(accountsKpis.lowest.balance) : "-"} hint={accountsKpis.lowest?.name || "Sem conta"} iconClassName="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300" />
+              <WalletSummaryCard icon={Building2} label="Maior Saldo" value={accountsKpis.highest ? formatCurrency(Number(currentBalanceByAccount[accountsKpis.highest.id] || 0)) : "-"} hint={accountsKpis.highest.name || "Sem conta"} iconClassName="bg-sky-100 text-sky-600 dark:bg-sky-500/20 dark:text-sky-300" />
+              <WalletSummaryCard icon={Building2} label="Menor Saldo" value={accountsKpis.lowest ? formatCurrency(Number(currentBalanceByAccount[accountsKpis.lowest.id] || 0)) : "-"} hint={accountsKpis.lowest.name || "Sem conta"} iconClassName="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300" />
             </div>
-
             <div className="h-8" />
             <div>
               {accounts.length === 0 ? (
@@ -703,26 +1157,54 @@ const Carteira = () => {
                   actionLabel="Adicionar Conta"
                   onAction={openCreateDialog}
                 />
-              ) : (
+             ) : (
                 <Card className="overflow-hidden border border-slate-200 shadow-sm dark:border-slate-700">
                   <div className="hidden md:block">
                     <Table>
-                      <TableHeader className="bg-muted/50">
+                      <TableHeader>
                         <TableRow>
                           <TableHead>Conta</TableHead>
-                          <TableHead>Banco</TableHead>
                           <TableHead>Tipo</TableHead>
                           <TableHead className="text-right">Saldo</TableHead>
+                          <TableHead className="text-right">Saldo previsto</TableHead>
                           <TableHead className="text-right">Acoes</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {accounts.map((account) => (
-                          <TableRow key={account.id}>
-                            <TableCell className="font-medium">{account.name}</TableCell>
-                            <TableCell>{account.bank_name}</TableCell>
+                          <TableRow key={account.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-slate-800 dark:hover:bg-slate-900/40">
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <BankLogoBadge
+                                  bankName={account.bank_name}
+                                  bankSlug={resolveBankSlug(account.bank_name)}
+                                  size="lg"
+                                />
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                    {account.name}
+                                  </p>
+                                  <p className="truncate text-sm text-gray-500 dark:text-slate-400">
+                                    {account.bank_name}
+                                  </p>
+                                  {account.account_holder_name ? (
+                                    <p className="truncate text-xs text-gray-400 dark:text-slate-500">
+                                      {account.account_holder_name}
+                                    </p>
+                                 ) : null}
+                                </div>
+                              </div>
+                            </TableCell>
                             <TableCell>{contaTipoLabel[account.account_type]}</TableCell>
-                            <TableCell className="text-right tabular-nums">{formatCurrency(account.balance)}</TableCell>
+                            <TableCell className="text-right tabular-nums">
+                              {formatCurrency(Number(currentBalanceByAccount[account.id] || 0))}
+                            </TableCell>
+                            <TableCell className="text-right tabular-nums text-blue-600">
+                              {formatCurrency(
+                                Number(currentBalanceByAccount[account.id] || 0) +
+                                  Number(expectedIncomeByAccount[account.id] || 0)
+                              )}
+                            </TableCell>
                             <TableCell className="text-right"><div className="flex items-center justify-end gap-2"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></TableCell>
                           </TableRow>
                         ))}
@@ -733,8 +1215,36 @@ const Carteira = () => {
                   <div className="space-y-3 p-4 md:hidden">
                     {accounts.map((account) => (
                       <Card key={account.id} className="border border-slate-200 p-4 shadow-sm dark:border-slate-700">
-                        <div className="mb-3 flex items-start justify-between gap-2"><div><p className="font-semibold text-slate-900 dark:text-slate-100">{account.name}</p><p className="text-sm text-slate-500 dark:text-slate-400">{account.bank_name}</p></div><div className="flex items-center gap-1"><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button><AlertDialog><AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></div>
-                        <div className="space-y-2 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Tipo</span><span className="font-medium">{contaTipoLabel[account.account_type]}</span></div><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Saldo</span><span className="font-semibold tabular-nums">{formatCurrency(account.balance)}</span></div></div>
+                        <div className="mb-3 flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <BankLogoBadge
+                              bankName={account.bank_name}
+                              bankSlug={resolveBankSlug(account.bank_name)}
+                              size="lg"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
+                                {account.name}
+                              </p>
+                              <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                                {account.bank_name}
+                              </p>
+                              {account.account_holder_name ? (
+                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                                  {account.account_holder_name}
+                                </p>
+                             ) : null}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-600" onClick={() => openEditAccount(account.id)}><Edit className="h-4 w-4" /></Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild><Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600"><Trash2 className="h-4 w-4" /></Button></AlertDialogTrigger>
+                              <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Excluir conta</AlertDialogTitle><AlertDialogDescription>Essa acao nao podera ser desfeita.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => deleteAccount(account.id)}>Excluir</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                        <div className="space-y-2 text-sm"><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Tipo</span><span className="font-medium">{contaTipoLabel[account.account_type]}</span></div><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Saldo</span><span className="font-semibold tabular-nums">{formatCurrency(Number(currentBalanceByAccount[account.id] || 0))}</span></div><div className="flex items-center justify-between"><span className="text-slate-500 dark:text-slate-400">Saldo previsto</span><span className="font-semibold tabular-nums text-blue-600">{formatCurrency(Number(currentBalanceByAccount[account.id] || 0) + Number(expectedIncomeByAccount[account.id] || 0))}</span></div></div>
                       </Card>
                     ))}
                   </div>
@@ -755,18 +1265,28 @@ const Carteira = () => {
             }
           }}
         >
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="space-y-5 rounded-2xl p-6 sm:max-w-2xl">
             {isCardsTab ? (
               <>
                 <DialogHeader>
                   <DialogTitle>{cardEditingId ? "Editar Cartao" : "Novo Cartao"}</DialogTitle>
                   <DialogDescription>Preencha os dados do cartao.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSaveCard} className="space-y-4">
+                <form onSubmit={handleSaveCard} className="space-y-5">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="card-name">Nome do cartao *</Label>
                       <Input id="card-name" value={cardForm.name} onChange={(e) => setCardForm({ ...cardForm, name: e.target.value })} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="card-holder-name">Nome no cartao / proprietario</Label>
+                      <Input
+                        id="card-holder-name"
+                        value={cardForm.card_holder_name}
+                        placeholder="Ex.: LUCAS S. SILVA"
+                        onChange={(e) => setCardForm({ ...cardForm, card_holder_name: e.target.value })}
+                      />
                     </div>
 
                     <div className="space-y-2">
@@ -782,7 +1302,7 @@ const Carteira = () => {
                                   className="h-4 w-4 object-contain"
                                 />
                               </span>
-                            ) : (
+                           ) : (
                               <span className="flex h-7 w-7 items-center justify-center gap-1 rounded-full bg-slate-200 px-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
                                 <Building2 className="h-3 w-3" />
                                 <span>{bankInitials}</span>
@@ -810,7 +1330,7 @@ const Carteira = () => {
                           <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
                             {banksLoading || bankSearchLoading ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : null}
+                           ) : null}
                           </div>
                         </div>
                         {bankOptionsOpen ? (
@@ -820,12 +1340,12 @@ const Carteira = () => {
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 Carregando bancos...
                               </div>
-                            ) : null}
+                           ) : null}
                             {!banksLoading && !bankSearchLoading && bankSuggestions.length === 0 ? (
                               <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
                                 Nenhum banco encontrado. Voce pode digitar manualmente.
                               </div>
-                            ) : null}
+                           ) : null}
                             {!banksLoading && !bankSearchLoading
                               ? bankSuggestions.map((bank) => {
                                   const isSelected =
@@ -860,13 +1380,13 @@ const Carteira = () => {
                                       </span>
                                       {isSelected ? (
                                         <Check className="mt-0.5 h-4 w-4 text-emerald-600" />
-                                      ) : null}
+                                     ) : null}
                                     </button>
                                   );
                                 })
                               : null}
                           </div>
-                        ) : null}
+                       ) : null}
                       </div>
                     </div>
 
@@ -898,25 +1418,30 @@ const Carteira = () => {
 
                     <div className="md:col-span-2">
                       <div
-                        className="rounded-xl border border-slate-200 p-4 text-white shadow-sm dark:border-slate-700"
+                        className="rounded-2xl border border-slate-200 p-6 text-white shadow-sm dark:border-slate-700"
                         style={{ background: `linear-gradient(135deg, ${bankBrandColor} 0%, #0f172a 100%)` }}
                       >
-                        <p className="mb-3 text-xs uppercase tracking-wider text-slate-300">Preview do cartao</p>
+                        <p className="mb-3 text-xs uppercase tracking-wider text-white/60">Preview do cartao</p>
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="text-base font-semibold">{cardForm.name.trim() || "Nome do cartao"}</p>
-                            <p className="mt-1 text-sm text-slate-300">{cardForm.bank_name.trim() || "Banco emissor"}</p>
+                            <p className="font-semibold text-white">{cardForm.name.trim() || "Nome do cartao"}</p>
+                            <p className="mt-1 text-sm text-white/80">{cardForm.bank_name.trim() || "Banco emissor"}</p>
+                            {cardForm.card_holder_name.trim() ? (
+                              <p className="mt-2 text-xs uppercase tracking-wide text-white/70">
+                                {cardForm.card_holder_name}
+                              </p>
+                           ) : null}
                           </div>
                           {bankAsset?.logo ? (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 shadow-md">
                               <img
                                 src={bankAsset.logo}
                                 alt={`Logo ${cardForm.bank_name || "Banco"}`}
-                                className="h-7 w-7 object-contain"
+                                className="h-6 w-6 object-contain"
                               />
                             </div>
-                          ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                         ) : (
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 text-slate-700 shadow-md dark:text-slate-700">
                               <div className="flex flex-col items-center leading-none">
                                 <Building2 className="h-4 w-4" />
                                 <span className="mt-1 text-[10px] font-bold">{bankInitials}</span>
@@ -924,7 +1449,7 @@ const Carteira = () => {
                             </div>
                           )}
                         </div>
-                        <div className="mt-4 flex items-center justify-between text-xs text-slate-300">
+                        <div className="mt-4 flex items-center justify-between text-xs text-white/80">
                           <span>Fechamento: dia {cardForm.closing_day || "--"}</span>
                           <span>Vencimento: dia {cardForm.due_day || "--"}</span>
                         </div>
@@ -932,43 +1457,266 @@ const Carteira = () => {
                     </div>
                   </div>
                   <div className="flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600">{cardEditingId ? "Salvar alteracoes" : "Salvar cartao"}</Button>
+                    <Button
+                      type="button"
+                      className="bg-gray-100 text-slate-700 hover:bg-gray-200"
+                      onClick={() => setDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-orange-500 shadow-md transition-all hover:bg-orange-600"
+                    >
+                      {cardEditingId ? "Salvar alteracoes" : "Salvar cartao"}
+                    </Button>
                   </div>
                 </form>
               </>
-            ) : (
+           ) : (
               <>
                 <DialogHeader>
                   <DialogTitle>{accountEditingId ? "Editar Conta" : "Nova Conta"}</DialogTitle>
                   <DialogDescription>Preencha os dados da conta.</DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSaveAccount} className="space-y-4">
+                <form onSubmit={handleSaveAccount} className="space-y-5">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="account-name">Nome da conta *</Label>
                       <Input id="account-name" value={accountForm.name} onChange={(e) => setAccountForm({ ...accountForm, name: e.target.value })} />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="account-holder-name">Proprietario</Label>
+                      <Input
+                        id="account-holder-name"
+                        value={accountForm.account_holder_name}
+                        placeholder="Ex.: Lucas Soares"
+                        onChange={(e) =>
+                          setAccountForm({
+                            ...accountForm,
+                            account_holder_name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="bank-name">Banco *</Label>
-                      <Input id="bank-name" value={accountForm.bank_name} onChange={(e) => setAccountForm({ ...accountForm, bank_name: e.target.value })} />
+                      <div className="relative">
+                        <div className="relative">
+                          <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
+                            {accountBankAsset?.logo ? (
+                              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm">
+                                <img
+                                  src={accountBankAsset.logo}
+                                  alt={`Logo ${accountForm.bank_name || "Banco"}`}
+                                  className="h-4 w-4 object-contain"
+                                />
+                              </span>
+                           ) : (
+                              <span className="flex h-7 w-7 items-center justify-center gap-1 rounded-full bg-slate-200 px-1 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                <Building2 className="h-3 w-3" />
+                                <span>{accountBankInitials}</span>
+                              </span>
+                            )}
+                          </div>
+                          <Input
+                            id="bank-name"
+                            value={accountForm.bank_name}
+                            placeholder="Digite para buscar ou preencher manualmente"
+                            onChange={(e) => {
+                              setAccountForm({
+                                ...accountForm,
+                                bank_name: e.target.value,
+                                bank_code: "",
+                                bank_slug: resolveBankSlug(e.target.value) || "",
+                                brand_color:
+                                  getBankAssetBySlug(resolveBankSlug(e.target.value))?.color ||
+                                  "",
+                              });
+                              setAccountBankQuery(e.target.value);
+                              setAccountBankOptionsOpen(true);
+                            }}
+                            onFocus={() => {
+                              setAccountBankQuery(accountForm.bank_name);
+                              setAccountBankOptionsOpen(true);
+                            }}
+                            onBlur={() => {
+                              window.setTimeout(() => setAccountBankOptionsOpen(false), 120);
+                            }}
+                            className="pr-10 pl-12"
+                          />
+                          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500">
+                            {banksLoading || accountBankSearchLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                           ) : null}
+                          </div>
+                        </div>
+                        {accountBankOptionsOpen ? (
+                          <div className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                            {banksLoading || accountBankSearchLoading ? (
+                              <div className="flex items-center gap-2 px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Carregando bancos...
+                              </div>
+                           ) : null}
+                            {!banksLoading && !accountBankSearchLoading && accountBankSuggestions.length === 0 ? (
+                              <div className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+                                Nenhum banco encontrado. Voce pode digitar manualmente.
+                              </div>
+                           ) : null}
+                            {!banksLoading && !accountBankSearchLoading
+                              ? accountBankSuggestions.map((bank) => {
+                                  const bankSlug = resolveBankSlug(bank.fullName, bank.code || "") || "";
+                                  const bankAsset = getBankAssetBySlug(bankSlug);
+                                  const bankInitials = getBankInitials(bank.fullName);
+                                  const isSelected =
+                                    accountForm.bank_name === bank.fullName &&
+                                    (accountForm.bank_code || "") === (bank.code || "");
+                                  return (
+                                    <button
+                                      key={`${bank.ispb || bank.fullName}-${bank.code || "no-code"}`}
+                                      type="button"
+                                      className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-slate-100 dark:hover:bg-slate-800"
+                                      onMouseDown={(event) => event.preventDefault()}
+                                      onClick={() => {
+                                        setAccountForm({
+                                          ...accountForm,
+                                          bank_name: bank.fullName,
+                                          bank_code: bank.code || "",
+                                          bank_slug: bankSlug,
+                                          brand_color: bankAsset?.color || "",
+                                        });
+                                        setAccountBankQuery(bank.fullName);
+                                        setAccountBankOptionsOpen(false);
+                                      }}
+                                    >
+                                      <span className="flex min-w-0 items-center gap-3">
+                                        {bankAsset?.logo ? (
+                                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                                            <img
+                                              src={bankAsset.logo}
+                                              alt={`Logo ${bank.fullName}`}
+                                              className="h-4 w-4 object-contain"
+                                            />
+                                          </span>
+                                       ) : (
+                                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200">
+                                            {bankInitials}
+                                          </span>
+                                        )}
+                                        <span className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                                          {bank.fullName}
+                                        </span>
+                                      </span>
+                                      {isSelected ? (
+                                        <Check className="mt-0.5 h-4 w-4 text-emerald-600" />
+                                     ) : null}
+                                    </button>
+                                  );
+                                })
+                              : null}
+                          </div>
+                       ) : null}
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="account-type">Tipo *</Label>
-                      <select id="account-type" value={accountForm.account_type} onChange={(e) => setAccountForm({ ...accountForm, account_type: e.target.value as BankAccountType })} className="w-full rounded-md border border-gray-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
-                        <option value="corrente">Corrente</option>
-                        <option value="poupanca">Poupanca</option>
-                        <option value="investimento">Investimento</option>
-                      </select>
+                      <Select
+                        value={accountForm.account_type}
+                        onValueChange={(value) =>
+                          setAccountForm({
+                            ...accountForm,
+                            account_type: value as BankAccountType,
+                          })
+                        }
+                      >
+                        <SelectTrigger id="account-type">
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="corrente">Corrente</SelectItem>
+                          <SelectItem value="poupanca">Poupanca</SelectItem>
+                          <SelectItem value="investimento">Investimento</SelectItem>
+                          <SelectItem value="digital">Digital</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="account-balance">Saldo *</Label>
-                      <CurrencyInput id="account-balance" value={accountForm.balance} onValueChange={(value) => setAccountForm({ ...accountForm, balance: value })} />
+                      <CurrencyInput
+                        id="account-balance"
+                        value={accountForm.balance}
+                        placeholder="R$ 0,00"
+                        className="text-right"
+                        onValueChange={(value) => setAccountForm({ ...accountForm, balance: value })}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <p className="mb-3 text-xs uppercase tracking-wider text-white/60">
+                        Preview da conta
+                      </p>
+                      <div
+                        className="rounded-2xl border border-slate-200 p-6 text-white shadow-sm dark:border-slate-700"
+                        style={{
+                          background: `linear-gradient(135deg, ${accountBrandColor} 0%, #0f172a 100%)`,
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <p className="font-semibold text-white">
+                              {accountForm.name.trim() || "Nome da conta"}
+                            </p>
+                            <p className="mt-1 text-sm text-white/80">
+                              {accountForm.bank_name.trim() || "Banco"}
+                            </p>
+                            {accountForm.account_holder_name.trim() ? (
+                              <p className="mt-2 text-xs uppercase tracking-wide text-white/70">
+                                {accountForm.account_holder_name}
+                              </p>
+                           ) : null}
+                            <span
+                              className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-medium ${contaTipoBadgeClass[accountForm.account_type]}`}
+                            >
+                              {contaTipoLabel[accountForm.account_type]}
+                            </span>
+                            <p className="mt-3 text-sm text-white/90">
+                              Saldo atual: {formatCurrency(Number(accountForm.balance || 0))}
+                            </p>
+                          </div>
+                          {accountBankAsset?.logo ? (
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 shadow-md">
+                              <img
+                                src={accountBankAsset.logo}
+                                alt={`Logo ${accountForm.bank_name || "Banco"}`}
+                                className="h-6 w-6 object-contain"
+                              />
+                            </div>
+                         ) : (
+                            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 text-slate-700 shadow-md dark:text-slate-700">
+                              <div className="flex flex-col items-center leading-none">
+                                <Building2 className="h-4 w-4" />
+                                <span className="mt-1 text-[10px] font-bold">{accountBankInitials}</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="flex justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-                    <Button type="submit" className="bg-orange-500 hover:bg-orange-600">{accountEditingId ? "Salvar alteracoes" : "Salvar conta"}</Button>
+                    <Button
+                      type="button"
+                      className="bg-gray-100 text-slate-700 hover:bg-gray-200"
+                      onClick={() => setDialogOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="bg-orange-500 shadow-md transition-all hover:bg-orange-600"
+                    >
+                      {accountEditingId ? "Salvar alteracoes" : "Salvar conta"}
+                    </Button>
                   </div>
                 </form>
               </>

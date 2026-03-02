@@ -35,7 +35,7 @@ const IA = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
 
-  // Atualizar campos quando configuraÃ§Ã£o carrega
+  // Atualizar campos quando configuração carrega
   useEffect(() => {
     if (configuracao) {
       setApiKey(configuracao.api_key);
@@ -44,8 +44,8 @@ const IA = () => {
   }, [configuracao]);
 
   const openaiModels = [
-    { value: 'gpt-4o', label: 'GPT-4o (Recomendado para visÃ£o)' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Mais rÃ¡pido)' },
+    { value: 'gpt-4o', label: 'GPT-4o (Recomendado para visão)' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Mais rápido)' },
     { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
     { value: 'gpt-4', label: 'GPT-4' }
   ];
@@ -62,7 +62,7 @@ const IA = () => {
     if (!apiKey.trim()) {
       toast({
         title: "Erro",
-        description: "Por favor, insira uma chave API vÃ¡lida.",
+        description: "Por favor, insira uma chave API válida.",
         variant: "destructive",
       });
       return;
@@ -87,8 +87,8 @@ const IA = () => {
 
       if (!allowedTypes.includes(file.type)) {
         toast({
-          title: "Tipo de arquivo nÃ£o suportado",
-          description: `${file.name} nÃ£o Ã© um tipo de arquivo suportado.`,
+          title: "Tipo de arquivo não suportado",
+          description: `${file.name} não é um tipo de arquivo suportado.`,
           variant: "destructive",
         });
         return;
@@ -169,26 +169,26 @@ const IA = () => {
     try {
       const base64Image = await convertFileToBase64(file);
       
-      const prompt = `Analise este comprovante financeiro e extraia as seguintes informaÃ§Ãµes em formato JSON:
+      const prompt = `Analise este comprovante financeiro e extraia as seguintes informações em formato JSON:
 
 {
   "tipo": "receita" ou "despesa",
-  "descricao": "descriÃ§Ã£o clara da transaÃ§Ã£o",
-  "valor": nÃºmero (apenas o valor numÃ©rico, sem sÃ­mbolos),
-  "categoria": "categoria apropriada (ex: AlimentaÃ§Ã£o, Transporte, SaÃºde, SalÃ¡rio, etc.)",
+  "descricao": "descrição clara da transação",
+  "valor": número (apenas o valor numérico, sem símbolos),
+  "categoria": "categoria apropriada (ex: Alimentação, Transporte, Saúde, Salário, etc.)",
   "data": "data no formato YYYY-MM-DD",
-  "confianca": nÃºmero de 0 a 100 indicando a confianÃ§a na anÃ¡lise
+  "confianca": número de 0 a 100 indicando a confiança na análise
 }
 
 Regras importantes:
 - Se for uma nota fiscal de compra/pagamento = "despesa"
-- Se for um comprovante de pagamento recebido/depÃ³sito = "receita"
-- Para o valor, extraia apenas nÃºmeros (ex: se vÃª "R$ 150,50", retorne 150.5)
-- Para categoria, use termos como: AlimentaÃ§Ã£o, Transporte, SaÃºde, EducaÃ§Ã£o, Lazer, Moradia, SalÃ¡rio, Freelance, Vendas
-- Para data, tente extrair a data da transaÃ§Ã£o, nÃ£o a data de emissÃ£o
-- Seja preciso na classificaÃ§Ã£o entre receita e despesa
+- Se for um comprovante de pagamento recebido/depósito = "receita"
+- Para o valor, extraia apenas números (ex: se vê "R$ 150,50", retorne 150.5)
+- Para categoria, use termos como: Alimentação, Transporte, Saúde, Educação, Lazer, Moradia, Salário, Freelance, Vendas
+- Para data, tente extrair a data da transação, não a data de emissão
+- Seja preciso na classificação entre receita e despesa
 
-Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
+Responda APENAS com o JSON, sem explicações adicionais.`;
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -245,7 +245,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
       
       await salvarResultado(resultado);
     } catch (error) {
-      console.error('Erro na anÃ¡lise OpenAI:', error);
+      console.error('Erro na análise OpenAI:', error);
       throw error;
     }
   };
@@ -262,7 +262,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
 
     if (!isConfigured) {
       toast({
-        title: "ConfiguraÃ§Ã£o necessÃ¡ria",
+        title: "Configuração necessária",
         description: "Configure sua chave API OpenAI primeiro.",
         variant: "destructive",
       });
@@ -280,13 +280,13 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
             await analyzeWithOpenAI(uploadedFile.file);
             results.push({} as any); // Placeholder para contagem
           } catch (error) {
-            console.error('Erro na anÃ¡lise de arquivo:', error);
+            console.error('Erro na análise de arquivo:', error);
           }
         } else {
-          // Para PDFs, mostrar mensagem que nÃ£o Ã© suportado ainda
+          // Para PDFs, mostrar mensagem que não é suportado ainda
           toast({
-            title: "PDF nÃ£o suportado",
-            description: `${uploadedFile.file.name}: AnÃ¡lise de PDF serÃ¡ implementada em breve.`,
+            title: "PDF não suportado",
+            description: `${uploadedFile.file.name}: Análise de PDF será implementada em breve.`,
             variant: "destructive",
           });
         }
@@ -295,13 +295,13 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
       setUploadedFiles([]);
       
       toast({
-        title: "AnÃ¡lise concluÃ­da",
+        title: "Análise concluída",
         description: `${results.length} arquivo(s) analisado(s) com sucesso!`,
       });
     } catch (error) {
-      console.error('Erro na anÃ¡lise:', error);
+      console.error('Erro na análise:', error);
       toast({
-        title: "Erro na anÃ¡lise",
+        title: "Erro na análise",
         description: "Verifique sua chave API e tente novamente.",
         variant: "destructive",
       });
@@ -347,10 +347,10 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
         description: `${result.tipo === 'despesa' ? 'Despesa' : 'Receita'} criada com sucesso!`,
       });
     } catch (error) {
-      console.error('Erro ao criar transaÃ§Ã£o:', error);
+      console.error('Erro ao criar transação:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar transaÃ§Ã£o. Verifique se uma categoria foi selecionada.",
+        description: "Erro ao criar transação. Verifique se uma categoria foi selecionada.",
         variant: "destructive",
       });
     }
@@ -372,23 +372,23 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
             <Brain className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">InteligÃªncia Artificial</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Inteligência Artificial</h1>
             <p className="text-gray-600 dark:text-slate-300">Analise automaticamente seus comprovantes e cupons fiscais</p>
           </div>
         </div>
 
         <Tabs defaultValue="upload" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="upload">Upload & AnÃ¡lise</TabsTrigger>
-            <TabsTrigger value="config">ConfiguraÃ§Ãµes</TabsTrigger>
-            <TabsTrigger value="history">HistÃ³rico</TabsTrigger>
+            <TabsTrigger value="upload">Upload & Análise</TabsTrigger>
+            <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="history">Histórico</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="space-y-6">
             <Card className="p-6">
               <div className="flex items-center space-x-3 mb-6">
                 <Settings className="w-5 h-5 text-gray-600 dark:text-slate-300" />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">ConfiguraÃ§Ãµes OpenAI</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Configurações OpenAI</h2>
               </div>
 
               <div className="space-y-4">
@@ -407,7 +407,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                     disabled={configLoading}
                   />
                    <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                     Sua chave API serÃ¡ armazenada com seguranÃ§a no banco de dados
+                     Sua chave API será armazenada com segurança no banco de dados
                    </p>
                 </div>
 
@@ -428,7 +428,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                 </div>
 
                 <Button onClick={handleSaveConfig} className="w-full" disabled={configLoading}>
-                  {isConfigured ? 'Atualizar ConfiguraÃ§Ã£o' : 'Salvar ConfiguraÃ§Ã£o'}
+                  {isConfigured ? 'Atualizar Configuração' : 'Salvar Configuração'}
                 </Button>
 
                 {isConfigured && (
@@ -453,7 +453,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                   <div className="flex items-center space-x-2">
                     <AlertCircle className="w-5 h-5 text-yellow-600" />
                     <p className="text-yellow-800">
-                      Configure sua chave API OpenAI na aba ConfiguraÃ§Ãµes antes de fazer upload.
+                      Configure sua chave API OpenAI na aba Configurações antes de fazer upload.
                     </p>
                   </div>
                 </div>
@@ -484,7 +484,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                     Clique ou arraste arquivos aqui
                   </p>
                   <p className="text-sm text-gray-500 dark:text-slate-400">
-                    Aceita imagens (PNG, JPG, GIF) e arquivos PDF atÃ© 10MB
+                    Aceita imagens (PNG, JPG, GIF) e arquivos PDF até 10MB
                   </p>
                 </label>
               </div>
@@ -535,7 +535,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
 
             {analysisResults.length > 0 && (
               <Card className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-4">Resultados da AnÃ¡lise OpenAI</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-4">Resultados da Análise OpenAI</h3>
                 <div className="space-y-4">
                   {analysisResults.map((result) => (
                     <div key={result.id} className="border rounded-lg p-4">
@@ -552,13 +552,13 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                           </span>
                         </div>
                         <span className="text-sm text-gray-500 dark:text-slate-400">
-                          ConfianÃ§a: {result.confianca}%
+                          Confiança: {result.confianca}%
                         </span>
                       </div>
                       
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                         <div>
-                          <span className="text-gray-500 dark:text-slate-400">DescriÃ§Ã£o:</span>
+                          <span className="text-gray-500 dark:text-slate-400">Descrição:</span>
                           <p className="font-medium">{result.descricao}</p>
                         </div>
                         <div>
@@ -642,7 +642,7 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
                                <AlertDialogHeader>
                                  <AlertDialogTitle>Excluir resultado?</AlertDialogTitle>
                                  <AlertDialogDescription>
-                                   Esta aÃ§Ã£o nÃ£o pode ser desfeita. O resultado da anÃ¡lise serÃ¡ excluÃ­do permanentemente.
+                                   Esta ação não pode ser desfeita. O resultado da análise será excluído permanentemente.
                                  </AlertDialogDescription>
                                </AlertDialogHeader>
                                <AlertDialogFooter>
@@ -664,11 +664,11 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
 
           <TabsContent value="history" className="space-y-6">
             <Card className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">HistÃ³rico de AnÃ¡lises</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">Histórico de Análises</h2>
               {analysisResults.length === 0 ? (
                 <div className="text-center py-8">
                   <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-slate-400">Nenhuma anÃ¡lise realizada ainda</p>
+                  <p className="text-gray-500 dark:text-slate-400">Nenhuma análise realizada ainda</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -702,4 +702,5 @@ Responda APENAS com o JSON, sem explicaÃ§Ãµes adicionais.`;
 };
 
 export default IA;
+
 

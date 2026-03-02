@@ -84,10 +84,10 @@ export default function Veiculos() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-slate-100">
-              VeÃ­culos
+              Veículos
             </h1>
             <p className="text-sm md:text-base text-gray-600 dark:text-slate-300">
-              Gerencie seus veÃ­culos e manutenÃ§Ãµes
+              Gerencie seus veículos e manutenções
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -109,19 +109,19 @@ export default function Veiculos() {
               className="border-orange-500 text-orange-600 hover:bg-orange-50 w-full sm:w-auto"
             >
               <Settings className="w-4 h-4 mr-2" />
-              Tipos de ManutenÃ§Ã£o
+              Tipos de Manutenção
             </Button>
             <Button
               onClick={() => setNovoVeiculoModalOpen(true)}
               className="bg-orange-500 hover:bg-orange-600 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Novo VeÃ­culo
+              Novo Veículo
             </Button>
           </div>
         </div>
 
-        {/* Lista de VeÃ­culos */}
+        {/* Lista de Veículos */}
         {loadingVeiculos ? (
           <div className="flex justify-center items-center h-32">
             <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
@@ -149,8 +149,8 @@ export default function Veiculos() {
                       {veiculo.quilometragem.toLocaleString()} km
                     </p>
                     <p className="text-sm text-gray-600 dark:text-slate-300">
-                      <strong>CombustÃ­vel:</strong>{" "}
-                      {veiculo.combustivel || "NÃ£o informado"}
+                      <strong>Combustível:</strong>{" "}
+                      {veiculo.combustivel || "Não informado"}
                     </p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -179,12 +179,12 @@ export default function Veiculos() {
           </div>
         )}
 
-        {/* ManutenÃ§Ãµes Pendentes */}
+        {/* Manutenções Pendentes */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center text-lg md:text-xl">
               <Settings className="w-5 h-5 mr-2 text-orange-500" />
-              ManutenÃ§Ãµes Pendentes
+              Manutenções Pendentes
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -206,7 +206,7 @@ export default function Veiculos() {
                             {manutencao.tipo}
                           </h4>
                           <p className="text-xs md:text-sm text-gray-600 dark:text-slate-300">
-                            Sistema: {manutencao.sistema} â€¢{" "}
+                            Sistema: {manutencao.sistema} •{" "}
                             {manutencao.veiculo?.marca}{" "}
                             {manutencao.veiculo?.modelo}
                           </p>
@@ -236,7 +236,7 @@ export default function Veiculos() {
                     ))
                   ) : (
                     <p className="text-center text-sm md:text-base text-gray-500 dark:text-slate-400 py-4">
-                      Nenhuma manutenÃ§Ã£o pendente encontrada.
+                      Nenhuma manutenção pendente encontrada.
                     </p>
                   )}
                 </div>

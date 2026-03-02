@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -75,23 +75,23 @@ interface CategoriaMercadoForm {
 const despesasSupermercado = [
   {
     id: "1",
-    descricao: "Compras do mÃªs",
+    descricao: "Compras do mês",
     valor: 850,
-    categoria: "AlimentaÃ§Ã£o",
+    categoria: "Alimentação",
     data: "2025-06-01",
   },
   {
     id: "2",
     descricao: "Feira",
     valor: 120,
-    categoria: "AlimentaÃ§Ã£o",
+    categoria: "Alimentação",
     data: "2025-06-08",
   },
   {
     id: "3",
-    descricao: "AÃ§ougue",
+    descricao: "Açougue",
     valor: 180,
-    categoria: "AlimentaÃ§Ã£o",
+    categoria: "Alimentação",
     data: "2025-06-12",
   },
 ];
@@ -100,30 +100,30 @@ const Mercado = () => {
   const handleImportarCategoriasPadrao = async () => {
     type CategoriaMercadoPadrao = { nome: string; descricao: string; cor: string };
     const categoriasPadrao: CategoriaMercadoPadrao[] = [
-      { nome: 'AlimentaÃ§Ã£o BÃ¡sica', descricao: 'Itens essenciais de alimentaÃ§Ã£o', cor: '#10B981' },
+      { nome: 'Alimentação Básica', descricao: 'Itens essenciais de alimentação', cor: '#10B981' },
       { nome: 'Limpeza', descricao: 'Produtos de limpeza e higiene', cor: '#3B82F6' },
       { nome: 'Higiene Pessoal', descricao: 'Produtos de cuidado pessoal', cor: '#8B5CF6' },
       { nome: 'Bebidas', descricao: 'Bebidas em geral', cor: '#F59E0B' },
-      { nome: 'Carnes e ProteÃ­nas', descricao: 'Carnes, peixes e proteÃ­nas', cor: '#EF4444' },
-      { nome: 'LaticÃ­nios', descricao: 'Leite, queijos e derivados', cor: '#06B6D4' },
+      { nome: 'Carnes e Proteínas', descricao: 'Carnes, peixes e proteínas', cor: '#EF4444' },
+      { nome: 'Laticínios', descricao: 'Leite, queijos e derivados', cor: '#06B6D4' },
       { nome: 'Frutas e Verduras', descricao: 'Hortifruti em geral', cor: '#84CC16' },
     ];
 
     try {
       for (const categoria of categoriasPadrao) {
-        // A funÃ§Ã£o createCategoriaMercado espera um objeto com mais campos,
-        // entÃ£o precisamos adicionar os que faltam com valores padrÃ£o.
+        // A função createCategoriaMercado espera um objeto com mais campos,
+        // então precisamos adicionar os que faltam com valores padrão.
         await createCategoriaMercado({ ...categoria, ativa: true });
       }
       toast({
         title: "Sucesso!",
-        description: "Categorias de mercado padrÃ£o importadas com sucesso.",
+        description: "Categorias de mercado padrão importadas com sucesso.",
       });
     } catch (error) {
-      console.error("Erro ao importar categorias de mercado padrÃ£o:", error);
+      console.error("Erro ao importar categorias de mercado padrão:", error);
       toast({
         title: "Erro",
-        description: "NÃ£o foi possÃ­vel importar as categorias de mercado padrÃ£o. Tente novamente.",
+        description: "Não foi possível importar as categorias de mercado padrão. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -161,10 +161,10 @@ const Mercado = () => {
   const [categoriaOrcamento, setCategoriaOrcamento] = useState("");
   const [modalOrcamentoAberto, setModalOrcamentoAberto] = useState(false);
 
-  // Carregar orÃ§amento ativo e buscar nome da categoria
+  // Carregar orçamento ativo e buscar nome da categoria
   useEffect(() => {
     if (orcamentosMercado.length > 0) {
-      const orcamentoAtivo = orcamentosMercado[0]; // Pega o primeiro orÃ§amento ativo
+      const orcamentoAtivo = orcamentosMercado[0]; // Pega o primeiro orçamento ativo
       if (orcamentoAtivo) {
         setOrcamentoMensal(orcamentoAtivo.valor_orcamento);
         setEstimativaGastos(orcamentoAtivo.estimativa_gastos);
@@ -180,14 +180,14 @@ const Mercado = () => {
     }
   }, [orcamentosMercado, categoriasDespesa]);
 
-  // CÃ¡lculos do orÃ§amento mensal baseados na categoria selecionada e na lista de mercado
+  // Cálculos do orçamento mensal baseados na categoria selecionada e na lista de mercado
   const dadosOrcamento = useMemo(() => {
     // Gastos reais calculados pelos itens da lista
     const gastosItensLista = itensMercado.reduce((total, item) => {
       return total + item.preco_atual * item.quantidade_atual;
     }, 0);
 
-    // Saldo disponÃ­vel = OrÃ§amento - Gastos Reais (nÃ£o a estimativa)
+    // Saldo disponível = Orçamento - Gastos Reais (não a estimativa)
     const saldoDisponivel = orcamentoMensal - gastosItensLista;
     const percentualGasto =
       orcamentoMensal > 0 ? (gastosItensLista / orcamentoMensal) * 100 : 0;
@@ -207,11 +207,11 @@ const Mercado = () => {
     {
       color: "bg-green-500",
       label: "ESTOQUE ADEQUADO",
-      description: "(Quantidade atual Ã© ideal)",
+      description: "(Quantidade atual é ideal)",
     },
     {
       color: "bg-yellow-500",
-      label: "ESTOQUE MÃ‰DIO",
+      label: "ESTOQUE MÉDIO",
       description: "(Quantidade entre 30% e 99% do ideal)",
     },
     {
@@ -222,7 +222,7 @@ const Mercado = () => {
     {
       color: "bg-gray-50 dark:bg-slate-900/400",
       label: "SEM ESTOQUE",
-      description: "(Sem itens ou item nÃ£o foi adicionado na lista de compras)",
+      description: "(Sem itens ou item não foi adicionado na lista de compras)",
     },
   ];
 
@@ -306,18 +306,18 @@ const Mercado = () => {
   ) => {
     const mesAtual = new Date().toISOString().slice(0, 7) + "-01"; // YYYY-MM-01
 
-    // Verificar se jÃ¡ existe um orÃ§amento ativo para esta categoria no mÃªs atual
+    // Verificar se já existe um orçamento ativo para esta categoria no mês atual
     const orcamentoExistente = getOrcamentoAtivo(categoriaSelecionada);
 
     if (orcamentoExistente) {
-      // Atualizar orÃ§amento existente
+      // Atualizar orçamento existente
       await updateOrcamentoMercado(orcamentoExistente.id, {
         valor_orcamento: novoOrcamento,
         estimativa_gastos: novaEstimativa,
         categoria_despesa: categoriaSelecionada,
       });
     } else {
-      // Criar novo orÃ§amento
+      // Criar novo orçamento
       await createOrcamentoMercado({
         categoria_despesa: categoriaSelecionada,
         valor_orcamento: novoOrcamento,
@@ -345,17 +345,17 @@ const Mercado = () => {
           </p>
         </div>
 
-        {/* Alerta de OrÃ§amento Excedido */}
+        {/* Alerta de Orçamento Excedido */}
         {dadosOrcamento.orcamentoExcedido && (
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
               <h3 className="text-sm md:text-base text-red-800 font-semibold">
-                âš ï¸ OrÃ§amento Excedido!
+                ⚠️ Orçamento Excedido!
               </h3>
             </div>
             <p className="text-sm md:text-base text-red-700 mt-1">
-              VocÃª ultrapassou o orÃ§amento mensal em R${" "}
+              Você ultrapassou o orçamento mensal em R${" "}
               {Math.abs(dadosOrcamento.saldoDisponivel).toLocaleString(
                 "pt-BR",
                 { minimumFractionDigits: 2 }
@@ -364,7 +364,7 @@ const Mercado = () => {
           </div>
         )}
 
-        {/* OrÃ§amento Mensal Card */}
+        {/* Orçamento Mensal Card */}
         <Card
           className={`p-4 md:p-6 border-l-4 ${
             dadosOrcamento.orcamentoExcedido
@@ -377,7 +377,7 @@ const Mercado = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div>
               <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-slate-100">
-                OrÃ§amento Mensal
+                Orçamento Mensal
               </h2>
               <p className="text-sm text-gray-600 dark:text-slate-300">
                 Categoria: {categoriaOrcamento}
@@ -460,7 +460,7 @@ const Mercado = () => {
 
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <span className="text-sm md:text-base text-gray-600 dark:text-slate-300">
-                  Saldo DisponÃ­vel:
+                  Saldo Disponível:
                 </span>
                 <div className="flex items-center space-x-2">
                   {dadosOrcamento.saldoDisponivel >= 0 ? (
@@ -583,13 +583,13 @@ const Mercado = () => {
                           <Checkbox />
                         </TableHead>
                         <TableHead>Categoria</TableHead>
-                        <TableHead>DescriÃ§Ã£o</TableHead>
+                        <TableHead>Descrição</TableHead>
                         <TableHead>Unid. Medida</TableHead>
                         <TableHead>Qtd. Atual</TableHead>
                         <TableHead>Qtd. Ideal</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>PreÃ§o Est.</TableHead>
-                        <TableHead>AÃ§Ãµes</TableHead>
+                        <TableHead>Preço Est.</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -645,7 +645,7 @@ const Mercado = () => {
                                     </AlertDialogTitle>
                                     <AlertDialogDescription>
                                       Tem certeza que deseja excluir "
-                                      {item.descricao}"? Esta aÃ§Ã£o nÃ£o pode ser
+                                      {item.descricao}"? Esta ação não pode ser
                                       desfeita.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
@@ -745,7 +745,7 @@ const Mercado = () => {
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-slate-300">PreÃ§o Estimado:</span>
+                        <span className="text-gray-600 dark:text-slate-300">Preço Estimado:</span>
                         <span className="font-medium">
                           R$ {item.preco_atual.toFixed(2)}
                         </span>
@@ -768,7 +768,7 @@ const Mercado = () => {
                     className="w-full sm:w-auto"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    Importar Categorias PadrÃ£o
+                    Importar Categorias Padrão
                   </Button>
                   <NovaCategoriaModal
                     trigger={
@@ -787,10 +787,10 @@ const Mercado = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nome</TableHead>
-                      <TableHead>DescriÃ§Ã£o</TableHead>
+                      <TableHead>Descrição</TableHead>
                       <TableHead>Cor</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>AÃ§Ãµes</TableHead>
+                      <TableHead>Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

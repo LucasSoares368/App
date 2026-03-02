@@ -30,14 +30,14 @@ export const GerenciarTiposManutencaoModal = ({
   const getSistemaColor = (sistema: string) => {
     const colors: { [key: string]: string } = {
       "Motor": "bg-red-100 text-red-800 border-red-200",
-      "TransmissÃ£o": "bg-blue-100 text-blue-800 border-blue-200",
+      "Transmissão": "bg-blue-100 text-blue-800 border-blue-200",
       "Freios": "bg-orange-100 text-orange-800 border-orange-200",
-      "SuspensÃ£o": "bg-purple-100 text-purple-800 border-purple-200",
-      "ElÃ©trico": "bg-yellow-100 text-yellow-800 border-yellow-200",
+      "Suspensão": "bg-purple-100 text-purple-800 border-purple-200",
+      "Elétrico": "bg-yellow-100 text-yellow-800 border-yellow-200",
       "Arrefecimento": "bg-cyan-100 text-cyan-800 border-cyan-200",
-      "AlimentaÃ§Ã£o": "bg-green-100 text-green-800 border-green-200",
+      "Alimentação": "bg-green-100 text-green-800 border-green-200",
       "Escapamento": "bg-gray-100 text-gray-800 dark:text-slate-100 border-gray-200 dark:border-slate-700",
-      "DireÃ§Ã£o": "bg-pink-100 text-pink-800 border-pink-200",
+      "Direção": "bg-pink-100 text-pink-800 border-pink-200",
       "Pneus e Rodas": "bg-indigo-100 text-indigo-800 border-indigo-200"
     };
     return colors[sistema] || "bg-gray-100 text-gray-800 dark:text-slate-100 border-gray-200 dark:border-slate-700";
@@ -51,7 +51,7 @@ export const GerenciarTiposManutencaoModal = ({
             <div className="flex items-center justify-between">
               <DialogTitle className="flex items-center">
                 <Settings className="w-6 h-6 mr-2 text-orange-500" />
-                Gerenciar Tipos de ManutenÃ§Ã£o
+                Gerenciar Tipos de Manutenção
               </DialogTitle>
               <div className="flex space-x-2">
                 <Button
@@ -124,7 +124,7 @@ export const GerenciarTiposManutencaoModal = ({
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-slate-400">
                 <Settings className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p>Nenhum tipo de manutenÃ§Ã£o cadastrado</p>
+                <p>Nenhum tipo de manutenção cadastrado</p>
                 <Button
                   onClick={() => setNovoTipoModalOpen(true)}
                   className="mt-3 bg-orange-500 hover:bg-orange-600"
