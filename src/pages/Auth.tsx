@@ -156,8 +156,9 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleForgotPassword = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
     if (!resetEmail) {
       toast.error("Por favor, informe seu email");
       return;
@@ -333,7 +334,7 @@ const Auth = () => {
                           <button type="button" className="text-primary font-medium hover:underline">Esqueci a senha</button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px] rounded-2xl">
-                          <form onSubmit={handleForgotPassword}>
+                          <div>
                             <DialogHeader>
                               <DialogTitle className="text-2xl font-bold">Recuperar Senha</DialogTitle>
                               <DialogDescription>
@@ -356,9 +357,10 @@ const Auth = () => {
                             </div>
                             <DialogFooter>
                               <Button 
-                                type="submit" 
+                                type="button" 
                                 className="w-full h-12 rounded-xl font-semibold"
                                 disabled={isResetting}
+                                onClick={handleForgotPassword}
                               >
                                 {isResetting ? (
                                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -367,7 +369,7 @@ const Auth = () => {
                                 )}
                               </Button>
                             </DialogFooter>
-                          </form>
+                          </div>
                         </DialogContent>
                       </Dialog>
                     </div>
