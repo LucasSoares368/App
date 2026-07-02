@@ -5,7 +5,6 @@ import { useState } from "react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { goToAppAuth } from "@/lib/app-url";
-// Logo import removed as we now use text branding
 
 const Header = () => {
   const navigate = useNavigate();
@@ -27,16 +26,12 @@ const Header = () => {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-4 md:py-6">
+    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 md:py-4">
       <div className="container mx-auto">
-        <div className="bg-background/60 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] px-6 py-3 md:py-4 flex items-center justify-between">
+        <div className="bg-background/90 backdrop-blur-xl border border-border/70 rounded-2xl shadow-[0_10px_40px_rgba(13,27,42,0.08)] px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate("/")}>
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20 group-hover:rotate-12 transition-transform duration-300">
-              <span className="text-white font-black text-xl">F</span>
-            </div>
-            <span className="text-xl font-black tracking-tight text-foreground hidden sm:block">
-              Financeiro<span className="text-primary font-medium">Pro</span>
-            </span>
+            <img src="/brand/logo.png" alt="LocalFiny" className="h-10 w-auto max-w-[170px] object-contain dark:hidden" />
+            <img src="/brand/logo-dark.png" alt="LocalFiny" className="hidden h-10 w-auto max-w-[170px] object-contain dark:block" />
           </div>
 
           {/* Desktop Navigation */}
@@ -67,7 +62,7 @@ const Header = () => {
               onClick={goToAppAuth}
               className="bg-primary text-white hover:bg-primary/90 rounded-xl px-6 font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-all"
             >
-              Começar Agora
+              Começar agora
             </Button>
           </div>
 
@@ -115,7 +110,7 @@ const Header = () => {
                   onClick={goToAppAuth}
                   className="w-full bg-primary text-white h-12 rounded-xl font-bold shadow-lg shadow-primary/20"
                 >
-                  Criar Conta Grátis
+                  Criar conta grátis
                 </Button>
               </div>
             </motion.div>

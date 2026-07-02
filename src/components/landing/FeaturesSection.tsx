@@ -17,23 +17,23 @@ import { motion } from "framer-motion";
 const features = [
   {
     icon: <Zap className="h-6 w-6" />,
-    title: "Lançamento Instantâneo",
-    description: "Anote receitas e gastos em segundos com categorização automática inteligente."
+    title: "Transações sem atrito",
+    description: "Registre entradas, saídas e transferências com banco, cartão, categoria e meio de pagamento."
   },
   {
     icon: <PieChart className="h-6 w-6" />,
-    title: "Visão 360 Graus",
-    description: "Acompanhe seu fluxo de caixa em tempo real com painéis visuais intuitivos."
+    title: "Dashboard vivo",
+    description: "Veja saldo, receitas, despesas, distribuição financeira e evolução mensal em tempo real."
   },
   {
     icon: <Target className="h-6 w-6" />,
-    title: "Objetivos de Vida",
-    description: "Crie metas personalizadas e monitore seu progresso para realizar seus sonhos."
+    title: "Metas conectadas",
+    description: "Crie objetivos de investimento, quitação de dívidas ou reserva com acompanhamento claro."
   },
   {
     icon: <Shield className="h-6 w-6" />,
-    title: "Fundo de Segurança",
-    description: "Calcule a reserva ideal para sua proteção baseada no seu custo de vida real."
+    title: "Reserva de emergência",
+    description: "Calcule custos fixos, variáveis e acompanhe quanto falta para sua proteção financeira."
   },
   {
     icon: <Calculator className="h-6 w-6" />,
@@ -42,8 +42,8 @@ const features = [
   },
   {
     icon: <TrendingUp className="h-6 w-6" />,
-    title: "Insights Estratégicos",
-    description: "Relatórios dinâmicos que identificam onde você pode economizar mais."
+    title: "Relatórios inteligentes",
+    description: "Entenda padrões, categorias, fluxo de caixa e decisões que melhoram seu resultado."
   },
   {
     icon: <Smartphone className="h-6 w-6" />,
@@ -57,8 +57,8 @@ const features = [
   },
   {
     icon: <Bell className="h-6 w-6" />,
-    title: "Gestão de Avisos",
-    description: "Nunca mais esqueça um vencimento com nosso sistema de alertas inteligentes."
+    title: "Alertas no WhatsApp",
+    description: "Receba lembretes e avisos importantes com integração via Evolution API."
   }
 ];
 
@@ -101,10 +101,10 @@ const FeaturesSection = () => {
               Funcionalidades
             </div>
             <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-              Tudo o que você precisa para <span className="text-primary">crescer</span>
+              Tudo para controlar, planejar e <span className="text-primary">evoluir</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Desenvolvemos um ecossistema completo para que você não precise de mais nada para gerir suas finanças.
+              Uma base completa para organizar a vida financeira pessoal e empresarial sem depender de planilhas espalhadas.
             </p>
           </motion.div>
           

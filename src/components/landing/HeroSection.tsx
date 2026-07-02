@@ -396,7 +396,7 @@ const HeroSection = () => {
   const currentCursorPath = useMemo(() => cursorPaths[screens[activeScreen].id] || [], [activeScreen]);
 
   return (
-    <section className="relative container mx-auto px-4 py-16 sm:py-24 lg:py-32 overflow-hidden">
+    <section className="relative container mx-auto px-4 py-14 sm:py-20 lg:py-28 overflow-hidden">
       {/* Background ambient light */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] opacity-50" />
@@ -421,7 +421,7 @@ const HeroSection = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Nova Versão 2.0
+              LocalFiny 2.0
             </motion.div>
             
             <motion.h1
@@ -430,8 +430,8 @@ const HeroSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             >
-              Domine suas finanças com <span className="relative inline-block text-primary">
-                inteligência
+              Seu dinheiro organizado em um painel <span className="relative inline-block text-primary">
+                inteligente
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 8" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <motion.path 
                     d="M1 6C50 2 150 2 199 6" 
@@ -453,8 +453,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            A plataforma definitiva para quem busca liberdade financeira. 
-            Gestão automatizada, insights reais e planejamento estratégico em um só lugar.
+            Controle bancos, cartões, metas, dívidas, relatórios e lembretes em uma experiência simples, visual e pronta para a sua rotina financeira.
           </motion.p>
 
           <motion.div
@@ -469,7 +468,7 @@ const HeroSection = () => {
               className="relative overflow-hidden group bg-primary text-primary-foreground hover:bg-primary/90 text-lg h-14 px-10 rounded-xl shadow-2xl shadow-primary/20 w-full sm:w-auto transition-all duration-300 active:scale-95"
             >
               <span className="relative z-10 flex items-center gap-2">
-                Começar Grátis
+                Começar grátis
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </span>
               <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
@@ -481,26 +480,26 @@ const HeroSection = () => {
               className="text-lg h-14 px-10 rounded-xl border-2 hover:bg-muted w-full sm:w-auto transition-all duration-300"
               onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
             >
-              Explorar Planos
+              Ver planos
             </Button>
           </motion.div>
 
-          <motion.div 
-            className="flex items-center gap-4 pt-4"
+          <motion.div
+            className="grid max-w-xl grid-cols-1 gap-3 pt-2 sm:grid-cols-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-muted overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-bold text-foreground">+5.000 pessoas</span> já transformaram suas finanças
-            </p>
+            {[
+              ["PIX", "PushinPay e Mercado Pago"],
+              ["IA", "análises e insights"],
+              ["PWA", "instale como app"],
+            ].map(([value, label]) => (
+              <div key={value} className="rounded-2xl border border-border bg-card/75 p-4 shadow-sm">
+                <p className="text-xl font-black text-foreground">{value}</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground">{label}</p>
+              </div>
+            ))}
           </motion.div>
         </motion.div>
 
@@ -530,7 +529,7 @@ const HeroSection = () => {
                     <div className="w-3 h-3 rounded-full bg-success/20 border border-success/40" />
                   </div>
                   <div className="ml-4 px-3 py-1 bg-background/50 rounded-lg border border-border text-[10px] font-medium text-muted-foreground">
-                    financeiro.pro/dashboard
+                    app.localfiny.com/dashboard
                   </div>
                 </div>
                 <div className="h-2 w-24 bg-muted rounded-full" />

@@ -31,7 +31,7 @@ const CTASection = () => {
                 transition={{ delay: 0.2 }}
               >
                 <Sparkles className="h-4 w-4" />
-                Vagas Limitadas para a Versão 2.0
+                Comece com o plano gratuito
               </motion.div>
 
               <motion.h2 
@@ -41,7 +41,7 @@ const CTASection = () => {
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
               >
-                O futuro da sua vida financeira <span className="text-white/60">começa aqui</span>
+                Organize sua vida financeira com clareza <span className="text-white/60">a partir de hoje</span>
               </motion.h2>
 
               <motion.p 
@@ -51,8 +51,7 @@ const CTASection = () => {
                 viewport={{ once: true }}
                 transition={{ delay: 0.4 }}
               >
-                Não deixe para amanhã a decisão que pode mudar seu destino. 
-                Grátis para sempre no plano básico, ou evolua para o Pro.
+                Cadastre sua conta, conecte sua rotina e acompanhe bancos, transações, metas, reserva e relatórios em um só painel.
               </motion.p>
 
               <motion.div 
@@ -67,7 +66,7 @@ const CTASection = () => {
                   onClick={goToAppAuth}
                   className="bg-white text-primary hover:bg-white/90 text-lg font-black h-16 px-12 rounded-2xl shadow-2xl shadow-black/20 active:scale-95 transition-all w-full sm:w-auto"
                 >
-                  Criar Conta Agora
+                  Criar conta grátis
                   <ArrowRight className="ml-2 h-6 w-6" />
                 </Button>
                 <Button 
