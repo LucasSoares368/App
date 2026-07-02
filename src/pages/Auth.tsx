@@ -21,7 +21,7 @@ import { Loader2, ArrowLeft, Shield, TrendingUp, Wallet, CheckCircle2 } from "lu
 import PasswordInput from "@/components/auth/PasswordInput";
 import Captcha from "@/components/auth/Captcha";
 import { motion, AnimatePresence } from "framer-motion";
-import { APP_RESET_PASSWORD_URL } from "@/lib/app-url";
+import { APP_RESET_PASSWORD_URL, goToLanding } from "@/lib/app-url";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -466,7 +466,7 @@ const Auth = () => {
             <Button 
               variant="ghost" 
               className="text-sm text-muted-foreground hover:text-primary transition-colors gap-2"
-              onClick={() => navigate("/")}
+              onClick={goToLanding}
             >
               <ArrowLeft size={16} />
               Voltar para a página inicial
