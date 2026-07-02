@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Sparkles, Crown, Zap, Star, Loader2, Shield, Target } from "lucide-react";
 import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { goToAppAuth } from "@/lib/app-url";
 
 interface Plan {
@@ -53,13 +52,10 @@ const PricingSection = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const { data, error } = await supabase
-          .from("plans")
-          .select("*")
-          .eq("is_active", true)
-          .order("price_monthly", { ascending: true });
-
-        if (error) throw error;
+        const response = await fetch("/api/public/plans");
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.error) throw new Error(payload.error || "Erro ao carregar planos");
+        const data = payload.data || [];
 
         const parsedPlans = (data || []).map((p) => ({
           ...p,
@@ -73,6 +69,7 @@ const PricingSection = () => {
         setPlans(parsedPlans as Plan[]);
       } catch (err) {
         console.error("Error fetching plans:", err);
+        setPlans([]);
       } finally {
         setLoading(false);
       }
@@ -150,6 +147,16 @@ const PricingSection = () => {
               <Loader2 className="h-12 w-12 animate-spin text-primary opacity-50" />
               <p className="text-sm text-muted-foreground animate-pulse">Carregando planos...</p>
             </div>
+          </div>
+        ) : plans.length === 0 ? (
+          <div className="mx-auto max-w-2xl rounded-[2rem] border border-border bg-card p-10 text-center shadow-xl shadow-black/[0.03]">
+            <h3 className="text-2xl font-black tracking-tight">Planos em configuração</h3>
+            <p className="mt-3 text-muted-foreground">
+              Os planos exibidos aqui são os mesmos configurados no painel administrativo.
+            </p>
+            <Button onClick={goToAppAuth} className="mt-8 h-12 rounded-xl px-8 font-bold">
+              Entrar no painel
+            </Button>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
