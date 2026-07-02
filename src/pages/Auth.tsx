@@ -210,17 +210,8 @@ const Auth = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="mb-10 inline-flex rounded-2xl bg-white/95 px-5 py-4 shadow-2xl shadow-black/10 backdrop-blur-sm">
-              <img
-                src="/brand/logo.png"
-                alt="LocalFiny"
-                className="h-14 w-auto object-contain"
-              />
-            </div>
-
             <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
-              LocalFiny <br />
-              <span className="text-white/80 text-3xl xl:text-4xl">Sua jornada para a independência financeira</span> <br />
+              Sua jornada para a independência financeira <br />
               começa aqui.
             </h1>
             
@@ -271,14 +262,6 @@ const Auth = () => {
         >
           {/* Header Mobile Only */}
           <div className="flex flex-col items-center lg:items-start mb-8 lg:mb-12">
-            <picture className="mb-8">
-              <source srcSet="/brand/logo-dark.png" media="(prefers-color-scheme: dark)" />
-              <img
-                src="/brand/logo.png"
-                alt="LocalFiny"
-                className="h-14 w-auto object-contain"
-              />
-            </picture>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">Bem-vindo de volta</h2>
             <p className="text-muted-foreground mt-2 text-center lg:text-left">
               Gerencie suas finanças com a plataforma mais moderna do mercado.
