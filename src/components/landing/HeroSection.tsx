@@ -3,6 +3,9 @@ import { ArrowRight, TrendingUp, TrendingDown, Target, CreditCard, PieChart } fr
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 import { goToAppAuth } from "@/lib/app-url";
+import bankInterLogo from "@/assets/bank-inter.png";
+import bankNubankLogo from "@/assets/bank-nubank.png";
+import bankPicpayLogo from "@/assets/bank-picpay.png";
 
 // Animated fake cursor component
 const FakeCursor = ({ positions, screenIndex }: { positions: { x: number; y: number; click?: boolean }[]; screenIndex: number }) => {
@@ -274,9 +277,9 @@ const screens = [
           <CreditCard className="h-4 w-4 text-primary" />
         </div>
         {[
-          { name: "Nubank", balance: 3245.80, trend: [30, 45, 35, 50, 42, 55, 60, 48, 65], color: "#820AD1", logo: "/images/banks/nubank.png" },
-          { name: "PicPay", balance: 1580.00, trend: [20, 25, 22, 30, 35, 28, 40, 38, 42], color: "#21C25E", logo: "/images/banks/picpay.png" },
-          { name: "Inter", balance: 890.50, trend: [15, 18, 12, 20, 16, 22, 19, 25, 23], color: "#FF7A00", logo: "/images/banks/inter.png" },
+          { name: "Nubank", balance: 3245.80, trend: [30, 45, 35, 50, 42, 55, 60, 48, 65], color: "#820AD1", logo: bankNubankLogo },
+          { name: "PicPay", balance: 1580.00, trend: [20, 25, 22, 30, 35, 28, 40, 38, 42], color: "#21C25E", logo: bankPicpayLogo },
+          { name: "Inter", balance: 890.50, trend: [15, 18, 12, 20, 16, 22, 19, 25, 23], color: "#FF7A00", logo: bankInterLogo },
         ].map((bank, i) => (
           <motion.div
             key={bank.name}
