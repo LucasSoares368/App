@@ -210,6 +210,12 @@ const Auth = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
+            <img
+              src="/brand/logo-dark.png"
+              alt="LocalFiny"
+              className="mb-10 h-16 w-auto max-w-[310px] object-contain"
+            />
+
             <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
               Sua jornada para a independência financeira <br />
               começa aqui.
