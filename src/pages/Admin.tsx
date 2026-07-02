@@ -31,7 +31,8 @@ import {
   CreditCard,
   QrCode,
   DollarSign,
-  AlertTriangle
+  AlertTriangle,
+  Zap
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -480,7 +481,7 @@ const Admin = () => {
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const proCount = (usersWithPlans || []).filter(u =>
-        u.subscription_status === "active" && u.plan_type !== "free"
+        ["active", "trialing"].includes(String(u.subscription_status || "")) && u.plan_type !== "free" && u.plan_type !== "starter"
       ).length;
       const newThisMonth = (usersWithPlans || []).filter(u =>
         u.created_at && new Date(u.created_at) >= startOfMonth
@@ -514,23 +515,23 @@ const Admin = () => {
 
     if (planFilter !== "all") {
       if (planFilter === "pro") {
-        filtered = filtered.filter(u => u.subscription_status === "active" && u.plan_type !== "free");
+        filtered = filtered.filter(u => ["active", "trialing"].includes(String(u.subscription_status || "")) && u.plan_type !== "free" && u.plan_type !== "starter");
       } else if (planFilter === "free") {
-        filtered = filtered.filter(u => !u.subscription_status || u.subscription_status !== "active" || u.plan_type === "free");
+        filtered = filtered.filter(u => !["active", "trialing"].includes(String(u.subscription_status || "")) || u.plan_type === "free" || u.plan_type === "starter");
       }
     }
 
     setFilteredUsers(filtered);
   };
 
-  const handleSetPlan = async (userId: string, planType: "free" | "pro" | "business") => {
+  const handleSetPlan = async (userId: string, planType: "free" | "starter" | "pro" | "business") => {
     try {
       await adminApi(`/admin/users/${userId}/plan`, {
         method: "PUT",
         body: JSON.stringify({ plan_type: planType, billing_period: "yearly" }),
       });
       const plan = plans.find(p => p.plan_type === planType);
-      toast.success(planType === "free" ? "Usuário alterado para plano Gratuito" : `Usuário alterado para plano ${plan?.name || planType}`);
+      toast.success(planType === "free" ? "Usuário alterado para sem plano ativo" : `Usuário alterado para plano ${plan?.name || planType}`);
       loadUsers();
     } catch (error: any) {
       console.error("Error setting plan:", error);
@@ -759,12 +760,12 @@ const Admin = () => {
                               <TableCell>
                                 <Badge
                                   variant={
-                                    user.subscription_status === "active" && user.plan_type !== "free"
+                                    ["active", "trialing"].includes(String(user.subscription_status || "")) && user.plan_type !== "free"
                                       ? "default"
                                       : "secondary"
                                   }
                                 >
-                                  {user.plan_name}
+                                  {user.subscription_status === "trialing" ? `${user.plan_name} Trial` : user.plan_name}
                                 </Badge>
                               </TableCell>
                               <TableCell className="hidden md:table-cell">
@@ -787,7 +788,11 @@ const Admin = () => {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleSetPlan(user.id, "free")}>
                                       <UserX className="h-4 w-4 mr-2" />
-                                      Definir como Free
+                                      Remover plano ativo
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleSetPlan(user.id, "starter")}>
+                                      <Zap className="h-4 w-4 mr-2" />
+                                      Definir como Starter
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleSetPlan(user.id, "pro")}>
                                       <Crown className="h-4 w-4 mr-2" />

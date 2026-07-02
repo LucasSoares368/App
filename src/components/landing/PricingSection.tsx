@@ -108,7 +108,7 @@ const PricingSection = () => {
           </div>
           <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">O plano perfeito para você</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Inicie gratuitamente e escale conforme seus objetivos financeiros crescem. Transparência total, sem letras miúdas.
+            Comece com 30 dias grátis no Starter e evolua conforme seus objetivos financeiros crescem. Transparência total, sem letras miúdas.
           </p>
 
           {/* Modern Billing Toggle */}
@@ -203,7 +203,7 @@ const PricingSection = () => {
                         <div>
                           <h3 className="text-2xl font-black">{plan.name}</h3>
                           <p className={`text-xs ${config.popular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                            {isFree ? "Para começar" : "Ideal para crescer"}
+                            {isFree ? "30 dias grátis" : "Ideal para crescer"}
                           </p>
                         </div>
                       </div>
@@ -212,6 +212,11 @@ const PricingSection = () => {
                         <span className="text-5xl font-black">{isFree ? "Grátis" : formatPrice(monthlyPrice).split(',')[0]}</span>
                         {!isFree && <span className={`text-sm font-medium ${config.popular ? "text-primary-foreground/60" : "text-muted-foreground"}`}>/mês</span>}
                       </div>
+                      {isFree && (
+                        <p className={`mt-3 text-sm font-bold ${config.popular ? "text-primary-foreground/80" : "text-primary"}`}>
+                          por 30 dias
+                        </p>
+                      )}
                       
                       {!isFree && billing === "yearly" && savingsLabel && (
                         <div className="mt-4 px-3 py-1.5 bg-success/20 text-success text-[11px] font-bold rounded-lg inline-flex items-center gap-1.5">

@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useUserPlan } from "@/hooks/useUserPlan";
 import { UpgradePrompt } from "@/components/plans/UpgradePrompt";
+import { Button } from "@/components/ui/button";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -113,7 +114,7 @@ const AppLayoutContent = ({
 }: AppLayoutContentProps) => {
   const { state } = useSidebar();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const { canUseBusinessProfile, loading: planLoading } = useUserPlan();
+  const { canUseBusinessProfile, loading: planLoading, plan, isAdmin } = useUserPlan();
 
   const userInitial = useMemo(() => {
     return user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0)?.toUpperCase() || "U";
@@ -182,7 +183,37 @@ const AppLayoutContent = ({
         </header>
 
         {/* Main Content - Added top margin for fixed header */}
-        <main className="flex-1 p-4 sm:p-6 bg-muted/30 overflow-x-hidden max-w-full mt-12 sm:mt-14">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 bg-muted/30 overflow-x-hidden max-w-full mt-12 sm:mt-14">
+          {!planLoading && !isAdmin && plan.status === "trialing" && (
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-bold text-foreground">Starter grátis ativo</p>
+                <p className="text-muted-foreground">
+                  Seu teste termina em {Math.max(0, Number(plan.trial_days_remaining || 0))} {Number(plan.trial_days_remaining || 0) === 1 ? "dia" : "dias"}.
+                </p>
+              </div>
+              <Button className="h-10 rounded-xl" onClick={() => navigate("/upgrade")}>
+                Ver planos
+              </Button>
+            </div>
+          )}
+
+          {!planLoading && !isAdmin && plan.status === "expired" && (
+            <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 text-sm shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="font-bold text-foreground">Seu teste grátis terminou</p>
+                <p className="text-muted-foreground">
+                  Escolha um plano para continuar usando o LocalFiny sem interrupções.
+                </p>
+              </div>
+              <Button className="h-10 rounded-xl" onClick={() => navigate("/upgrade")}>
+                Escolher plano
+              </Button>
+            </div>
+          )}
+
+          {children}
+        </main>
       </SidebarInset>
     </>
   );

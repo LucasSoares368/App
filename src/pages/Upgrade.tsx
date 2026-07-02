@@ -185,6 +185,9 @@ export default function Upgrade() {
     return monthlyTotal - plan.price_yearly;
   };
 
+  const isTrialing = currentPlan.status === "trialing";
+  const trialDaysRemaining = Math.max(0, Number(currentPlan.trial_days_remaining || 0));
+
   if (loading || planLoading) {
     return (
       <AppLayout>
@@ -212,7 +215,9 @@ export default function Upgrade() {
 
           {/* Current plan badge */}
           <Badge variant="outline" className="mt-4 rounded-full px-4 py-1 text-sm">
-            Plano atual: {currentPlan.plan_name}
+            {isTrialing
+              ? `Starter grátis termina em ${trialDaysRemaining} ${trialDaysRemaining === 1 ? "dia" : "dias"}`
+              : `Plano atual: ${currentPlan.plan_name}`}
           </Badge>
 
           {/* Billing Toggle */}
@@ -299,6 +304,11 @@ export default function Upgrade() {
                       <p className="mt-2 text-sm font-medium text-success">
                         <Star className="mr-1 inline h-3 w-3" />
                         Economize {formatPrice(savings)}/ano
+                      </p>
+                    )}
+                    {plan.price_monthly === 0 && (
+                      <p className="mt-2 text-sm font-medium text-primary">
+                        Grátis por 30 dias
                       </p>
                     )}
                   </div>

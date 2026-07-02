@@ -453,6 +453,11 @@ function defaultPlan() {
     plan_type: "starter",
     plan_name: "Starter",
     is_active: true,
+    status: "trialing",
+    billing_period: "trial",
+    current_period_start: null,
+    current_period_end: null,
+    trial_days_remaining: 0,
     max_banks: 999,
     max_goals: 1,
     max_reminders: 3,
@@ -476,6 +481,11 @@ function fullFeaturePlan(planName = "Business") {
     ...defaultPlan(),
     plan_type: "business",
     plan_name: planName,
+    status: "active",
+    billing_period: "yearly",
+    current_period_start: null,
+    current_period_end: null,
+    trial_days_remaining: 0,
     max_goals: 999,
     max_reminders: 999,
     whatsapp_enabled: true,
@@ -491,6 +501,24 @@ function fullFeaturePlan(planName = "Business") {
     ai_enabled: true,
     import_enabled: true,
   };
+}
+
+async function createStarterTrialForUser(userId) {
+  const trialDays = intValue(process.env.STARTER_TRIAL_DAYS, 30);
+  const planRows = await query(
+    "select id from plans where plan_type in ('starter', 'free') and is_active = true order by case plan_type when 'starter' then 1 else 2 end, created_at asc limit 1",
+  ).catch(() => []);
+  const starterPlan = planRows[0];
+  if (!starterPlan || trialDays <= 0) return null;
+
+  const subscriptionId = uuidv4();
+  await query(
+    `insert into subscriptions
+      (id, user_id, plan_id, status, billing_period, current_period_start, current_period_end)
+     values (?, ?, ?, 'trialing', 'trial', now(), date_add(now(), interval ? day))`,
+    [subscriptionId, userId, starterPlan.id, trialDays],
+  );
+  return subscriptionId;
 }
 
 function handleError(res, error) {
@@ -1009,6 +1037,7 @@ app.post("/api/auth/signup", async (req, res) => {
       "insert into profiles (id, user_id, name, full_name, email, organization_name, telefone) values (?, ?, ?, ?, ?, ?, ?)",
       [id, id, name || email, name || email, email, organizationName || null, telefone || null],
     );
+    await createStarterTrialForUser(id);
     const user = { id, email, role: "user", name, organization_name: organizationName, telefone };
     res.json({ user: publicUser(user), session: { access_token: signToken(user), user: publicUser(user) } });
   } catch (error) {
@@ -1171,13 +1200,21 @@ app.post("/api/rpc/get_user_plan", authRequired, async (_req, res) => {
           p.annual_projection_enabled,
           p.history_months,
           p.monthly_planning_enabled,
-          s.status
+          p.ai_enabled,
+          p.import_enabled,
+          s.status,
+          s.billing_period,
+          s.current_period_start,
+          s.current_period_end,
+          greatest(0, ceiling(timestampdiff(second, now(), s.current_period_end) / 86400)) as trial_days_remaining
         from subscriptions s
         join plans p on p.id = s.plan_id
         where s.user_id = ?
-          and s.status = 'active'
+          and s.status in ('active', 'trialing')
           and (s.current_period_end is null or s.current_period_end > now())
-        order by s.updated_at desc, s.created_at desc
+        order by case s.status when 'active' then 1 when 'trialing' then 2 else 3 end,
+                 s.updated_at desc,
+                 s.created_at desc
         limit 1
       `,
       [_req.user.id],
@@ -1193,14 +1230,43 @@ app.post("/api/rpc/get_user_plan", authRequired, async (_req, res) => {
           plan_type: planType,
           plan_name: plan.plan_name || planType,
           is_active: true,
-          ai_enabled: !["starter", "free"].includes(planType),
-          import_enabled: !["starter", "free"].includes(planType),
+          status: plan.status || "active",
+          billing_period: plan.billing_period || null,
+          current_period_start: plan.current_period_start || null,
+          current_period_end: plan.current_period_end || null,
+          trial_days_remaining: Number(plan.trial_days_remaining || 0),
+          ai_enabled: boolValue(plan.ai_enabled),
+          import_enabled: boolValue(plan.import_enabled),
         }],
         error: null,
       });
     }
 
-    res.json({ data: [defaultPlan()], error: null });
+    const latestRows = await query(
+      `select s.status, s.current_period_end
+         from subscriptions s
+        where s.user_id = ?
+        order by s.updated_at desc, s.created_at desc
+        limit 1`,
+      [_req.user.id],
+    ).catch(() => []);
+
+    if (latestRows[0]) {
+      return res.json({
+        data: [{
+          ...defaultPlan(),
+          is_active: false,
+          status: "expired",
+          billing_period: "trial",
+          current_period_end: latestRows[0].current_period_end || null,
+          trial_days_remaining: 0,
+        }],
+        error: null,
+      });
+    }
+
+    await createStarterTrialForUser(_req.user.id);
+    res.json({ data: [{ ...defaultPlan(), trial_days_remaining: intValue(process.env.STARTER_TRIAL_DAYS, 30) }], error: null });
   } catch (error) {
     handleError(res, error);
   }
@@ -1278,7 +1344,7 @@ app.get("/api/admin/users", authRequired, adminRequired, async (_req, res) => {
 
     const users = rows.map((row) => {
       const normalized = normalizeRow(row);
-      const isActive = normalized.subscription_status === "active";
+      const isActive = ["active", "trialing"].includes(String(normalized.subscription_status || ""));
       return {
         ...normalized,
         full_name: normalized.full_name || normalized.profile_name || normalized.name || "Sem nome",

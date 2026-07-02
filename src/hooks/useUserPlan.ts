@@ -7,6 +7,11 @@ interface UserPlan {
   plan_type: PlanType;
   plan_name: string;
   is_active: boolean;
+  status?: "active" | "trialing" | "expired" | string;
+  billing_period?: string | null;
+  current_period_start?: string | null;
+  current_period_end?: string | null;
+  trial_days_remaining?: number;
   max_banks: number;
   max_goals: number;
   max_reminders: number;
@@ -34,6 +39,11 @@ const DEFAULT_PLAN: UserPlan = {
   plan_type: "starter",
   plan_name: "Starter",
   is_active: true,
+  status: "trialing",
+  billing_period: "trial",
+  current_period_start: null,
+  current_period_end: null,
+  trial_days_remaining: 0,
   max_banks: 999,
   max_goals: 1,
   max_reminders: 3,
@@ -142,6 +152,11 @@ export function useUserPlan() {
         userPlan = {
           ...raw,
           plan_type: normalizePlanType(raw.plan_type),
+          status: raw.status || "active",
+          billing_period: raw.billing_period || null,
+          current_period_start: raw.current_period_start || null,
+          current_period_end: raw.current_period_end || null,
+          trial_days_remaining: Number(raw.trial_days_remaining || 0),
           // Ensure new fields have defaults if not returned
           cashflow_projection_enabled: raw.cashflow_projection_enabled ?? (raw.plan_type !== "starter" && raw.plan_type !== "free"),
           export_enabled: raw.export_enabled ?? (raw.plan_type !== "starter" && raw.plan_type !== "free"),
@@ -180,58 +195,61 @@ export function useUserPlan() {
   }, [loadPlan]);
 
   // Permission checks
+  const hasActivePlan = useMemo(() => isAdmin || plan.is_active !== false, [isAdmin, plan.is_active]);
+
   const canAddGoal = useCallback(() => {
+    if (!hasActivePlan) return false;
     if (isAdmin || plan.max_goals >= 999) return true;
     return usage.goals_count < plan.max_goals;
-  }, [isAdmin, plan.max_goals, usage.goals_count]);
+  }, [hasActivePlan, isAdmin, plan.max_goals, usage.goals_count]);
 
   const canUseReports = useCallback(() => {
-    return isAdmin || plan.reports_enabled;
-  }, [isAdmin, plan.reports_enabled]);
+    return hasActivePlan && (isAdmin || plan.reports_enabled);
+  }, [hasActivePlan, isAdmin, plan.reports_enabled]);
 
   const canUseCashflowProjection = useCallback(() => {
-    return isAdmin || plan.cashflow_projection_enabled;
-  }, [isAdmin, plan.cashflow_projection_enabled]);
+    return hasActivePlan && (isAdmin || plan.cashflow_projection_enabled);
+  }, [hasActivePlan, isAdmin, plan.cashflow_projection_enabled]);
 
   const canExportData = useCallback(() => {
-    return isAdmin || plan.export_enabled;
-  }, [isAdmin, plan.export_enabled]);
+    return hasActivePlan && (isAdmin || plan.export_enabled);
+  }, [hasActivePlan, isAdmin, plan.export_enabled]);
 
   const canUseSplit = useCallback(() => {
-    return isAdmin || plan.split_enabled;
-  }, [isAdmin, plan.split_enabled]);
+    return hasActivePlan && (isAdmin || plan.split_enabled);
+  }, [hasActivePlan, isAdmin, plan.split_enabled]);
 
   const canUseBusinessProfile = useCallback(() => {
-    return isAdmin || plan.business_profile_enabled;
-  }, [isAdmin, plan.business_profile_enabled]);
+    return hasActivePlan && (isAdmin || plan.business_profile_enabled);
+  }, [hasActivePlan, isAdmin, plan.business_profile_enabled]);
 
   const canUseAdvancedDashboard = useCallback(() => {
-    return isAdmin || plan.advanced_dashboard_enabled;
-  }, [isAdmin, plan.advanced_dashboard_enabled]);
+    return hasActivePlan && (isAdmin || plan.advanced_dashboard_enabled);
+  }, [hasActivePlan, isAdmin, plan.advanced_dashboard_enabled]);
 
   const canUseAnnualProjection = useCallback(() => {
-    return isAdmin || plan.annual_projection_enabled;
-  }, [isAdmin, plan.annual_projection_enabled]);
+    return hasActivePlan && (isAdmin || plan.annual_projection_enabled);
+  }, [hasActivePlan, isAdmin, plan.annual_projection_enabled]);
 
   const canUseMonthlyPlanning = useCallback(() => {
-    return isAdmin || plan.monthly_planning_enabled;
-  }, [isAdmin, plan.monthly_planning_enabled]);
+    return hasActivePlan && (isAdmin || plan.monthly_planning_enabled);
+  }, [hasActivePlan, isAdmin, plan.monthly_planning_enabled]);
 
   const canUseWhatsApp = useCallback(() => {
-    return isAdmin || plan.whatsapp_enabled;
-  }, [isAdmin, plan.whatsapp_enabled]);
+    return hasActivePlan && (isAdmin || plan.whatsapp_enabled);
+  }, [hasActivePlan, isAdmin, plan.whatsapp_enabled]);
 
   const canUseAI = useCallback(() => {
-    return isAdmin || plan.ai_enabled;
-  }, [isAdmin, plan.ai_enabled]);
+    return hasActivePlan && (isAdmin || plan.ai_enabled);
+  }, [hasActivePlan, isAdmin, plan.ai_enabled]);
 
   const canImportData = useCallback(() => {
-    return isAdmin || plan.import_enabled;
-  }, [isAdmin, plan.import_enabled]);
+    return hasActivePlan && (isAdmin || plan.import_enabled);
+  }, [hasActivePlan, isAdmin, plan.import_enabled]);
 
   const canUseMultipleGoals = useCallback(() => {
-    return isAdmin || plan.max_goals > 1;
-  }, [isAdmin, plan.max_goals]);
+    return hasActivePlan && (isAdmin || plan.max_goals > 1);
+  }, [hasActivePlan, isAdmin, plan.max_goals]);
 
   // History months limit
   const historyMonths = useMemo(() => {
@@ -249,20 +267,23 @@ export function useUserPlan() {
   const refetch = useCallback(() => loadPlan(true), [loadPlan]);
 
   // Helpers for limits
-  const canAddBank = useCallback(() => true, []);
+  const canAddBank = useCallback(() => hasActivePlan, [hasActivePlan]);
   const canAddReminder = useCallback(() => {
+    if (!hasActivePlan) return false;
     if (isAdmin || plan.max_reminders >= 999) return true;
     return usage.reminders_count < plan.max_reminders;
-  }, [isAdmin, plan.max_reminders, usage.reminders_count]);
-  const getRemainingBanks = useCallback(() => "Ilimitado" as string | number, []);
+  }, [hasActivePlan, isAdmin, plan.max_reminders, usage.reminders_count]);
+  const getRemainingBanks = useCallback(() => (hasActivePlan ? "Ilimitado" : 0) as string | number, [hasActivePlan]);
   const getRemainingGoals = useCallback(() => {
+    if (!hasActivePlan) return 0 as string | number;
     if (isAdmin || plan.max_goals >= 999) return "Ilimitado" as string | number;
     return Math.max(0, plan.max_goals - usage.goals_count) as string | number;
-  }, [isAdmin, plan.max_goals, usage.goals_count]);
+  }, [hasActivePlan, isAdmin, plan.max_goals, usage.goals_count]);
   const getRemainingReminders = useCallback(() => {
+    if (!hasActivePlan) return 0 as string | number;
     if (isAdmin || plan.max_reminders >= 999) return "Ilimitado" as string | number;
     return Math.max(0, plan.max_reminders - usage.reminders_count) as string | number;
-  }, [isAdmin, plan.max_reminders, usage.reminders_count]);
+  }, [hasActivePlan, isAdmin, plan.max_reminders, usage.reminders_count]);
 
   return {
     plan,
