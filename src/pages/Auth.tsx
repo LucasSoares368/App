@@ -211,9 +211,9 @@ const Auth = () => {
             transition={{ duration: 0.8 }}
           >
             <img
-              src="/brand/logo-dark.png"
+              src="/brand/logo-auth.png"
               alt="LocalFiny"
-              className="mb-10 h-16 w-auto max-w-[310px] object-contain"
+              className="mb-10 h-16 w-auto max-w-[310px] object-contain drop-shadow-sm"
             />
 
             <h1 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
