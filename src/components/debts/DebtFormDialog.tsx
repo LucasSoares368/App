@@ -100,7 +100,7 @@ export function DebtFormDialog({ open, onOpenChange, debt, profileType, onSucces
         total_amount: formData.total_amount,
         current_balance: currentBalance,
         interest_rate: formData.interest_rate ? Number(formData.interest_rate) : null,
-        minimum_payment: formData.minimum_payment > 0 ? formData.minimum_payment : null,
+        minimum_payment: Math.max(0, Number(formData.minimum_payment || 0)),
         due_day: formData.due_day ? Number(formData.due_day) : null,
         start_date: formData.start_date || null,
         notes: formData.notes.trim() || null,
